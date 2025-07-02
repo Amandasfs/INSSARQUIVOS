@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="150.0" prefWidth="300.0" style="-fx-background-color: #044793;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="inss.gca.mogi.mogi.controller.LoadingController">
+   <children>
+      <ImageView fitHeight="150.0" fitWidth="200.0" layoutX="50.0" layoutY="14.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@assets/images/logoBranco.png" />
+         </image>
+      </ImageView>
+      <ProgressBar  fx:id="progressBar" layoutX="56.0" layoutY="84.0" prefWidth="200.0" progress="0.0" />
+   </children>
+</AnchorPane>

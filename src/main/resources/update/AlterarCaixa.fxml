@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.text.Font?>
+<?import javafx.collections.FXCollections?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="inss.gca.mogi.mogi.controller.update.AlterarCaixaController"
+            prefHeight="400.0" prefWidth="600.0">
+    <children>
+        <Label layoutX="54.0" layoutY="44.0" text="CADASTRAR CAIXA" textFill="#044793">
+            <font>
+                <Font name="System Bold" size="26.0" />
+            </font>
+        </Label>
+        <TextField fx:id="codCaixaField" layoutX="22.0" layoutY="95.0" prefHeight="40.0" prefWidth="124.0" promptText="Código da Caixa" style="-fx-border-color: #005cb9; -fx-text-fill: #005cb9;" />
+        <TextField fx:id="ruaField" layoutX="152.0" layoutY="95.0" prefHeight="40.0" prefWidth="45.0" promptText="Rua" style="-fx-border-color: #005cb9; -fx-text-fill: #005cb9;" />
+        <TextField fx:id="prateleiraField" layoutX="206.0" layoutY="95.0" prefHeight="40.0" prefWidth="106.0" promptText="Nº prateleira" style="-fx-border-color: #005cb9; -fx-text-fill: #005cb9;" />
+        <TextField fx:id="nbInicialField" layoutX="22.0" layoutY="143.0" prefHeight="40.0" prefWidth="290.0" promptText="NB inicial" style="-fx-border-color: #005cb9; -fx-text-fill: #005cb9;" />
+        <TextField fx:id="nbFinalField" layoutX="22.0" layoutY="189.0" prefHeight="40.0" prefWidth="290.0" promptText="NB Final" style="-fx-border-color: #005cb9; -fx-text-fill: #005cb9;" />
+        <ChoiceBox fx:id="andarSelect" layoutX="22.0" layoutY="236.0" prefHeight="40.0" prefWidth="161.0" style="-fx-background-color: white; -fx-border-color: #005cb9;">
+            <items>
+                <FXCollections fx:factory="observableArrayList">
+                    <String fx:value="Andar" />
+                    <String fx:value="segundo" />
+                    <String fx:value="terceiro" />
+                </FXCollections>
+            </items>
+        </ChoiceBox>
+        <Button fx:id="cadastrarButton"
+                onAction="#salvarAlteracoes"
+                layoutX="190.0" layoutY="236.0"
+                prefHeight="40.0" prefWidth="124.0"
+                style="-fx-background-color: #044793; -fx-alignment: center; -fx-cursor: hand;"
+                text="SALVAR ALTERAÇÕES"
+                textFill="WHITE">
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font>
+        </Button>
+
+    </children>
+</AnchorPane>

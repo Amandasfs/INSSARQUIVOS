@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="inss.gca.mogi.mogi.controller.select.SelectEtiq"
+            prefHeight="400.0" prefWidth="600.0">
+    <children>
+        <Label text="Código da Caixa:" layoutX="20" layoutY="30"/>
+        <TextField fx:id="txtCodCaixa" layoutX="150" layoutY="25" prefWidth="200"/>
+        <Button text="Gerar Etiqueta" layoutX="150" layoutY="70" onAction="#onGerarEtiqueta"/>
+    </children>
+</AnchorPane>

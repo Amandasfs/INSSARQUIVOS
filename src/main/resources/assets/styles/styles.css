@@ -1,0 +1,25 @@
+.text-field:focused, .choice-box:focused {
+    -fx-border-color: #00d63d;
+    -fx-border-width: 2;
+}
+/* Campos de texto com borda verde ao focar */
+.text-field:focused, .password-field:focused {
+    -fx-border-color: #00d63d;
+    -fx-border-width: 2px;
+}
+
+/* Botões com transição ao focar */
+.button {
+    -fx-background-color: #00d63d;
+    -fx-text-fill: white;
+    -fx-background-insets: 0;
+    -fx-background-radius: 5;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 3, 0, 0, 1);
+    -fx-transition: all 0.3s ease-in-out; /* só funciona em WebView, não JavaFX puro */
+}
+
+.button:focused {
+    -fx-background-color: #00d63d;
+    -fx-border-color: #00d63d;
+    -fx-border-width: 2px;
+}

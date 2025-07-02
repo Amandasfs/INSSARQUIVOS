@@ -1,0 +1,58 @@
+-- Tabela Caixa
+CREATE TABLE caixa (
+    cod_caixa VARCHAR(10) PRIMARY KEY,
+    prateleira INTEGER NOT NULL,
+    rua VARCHAR(2) NOT NULL,
+    andar VARCHAR(20) NOT NULL,
+    nb_inicial VARCHAR(20) NOT NULL,
+    nb_final VARCHAR(20) NOT NULL,
+    id_servidor INTEGER NOT NULL
+);
+
+-- Tabela Segurado
+CREATE TABLE segurado (
+    id SERIAL PRIMARY KEY,
+    nome_segurado VARCHAR(255) NOT NULL,
+    cpf VARCHAR(14) UNIQUE NOT NULL, -- Formato esperado: 000.000.000-00
+    id_servidor INTEGER NOT NULL,
+    CONSTRAINT fk_seg_servidor FOREIGN KEY (id_servidor) REFERENCES servidor(id)
+);
+
+-- Tabela Arquivo
+
+CREATE TABLE arquivo (
+    id SERIAL PRIMARY KEY,
+    nb VARCHAR(20) NOT NULL, -- Número de benefício no formato "3000000000"
+    tipo_beneficio VARCHAR(100) NOT NULL,
+    id_segurado INTEGER NOT NULL,
+    cod_caixa VARCHAR(20) NOT NULL,
+    id_servidor INTEGER NOT NULL,
+    CONSTRAINT fk_arquivo_segurado FOREIGN KEY (id_segurado) REFERENCES segurado(id),
+    CONSTRAINT fk_arquivo_caixa FOREIGN KEY (cod_caixa) REFERENCES caixa(cod_caixa),
+    CONSTRAINT fk_arquivo_servidor FOREIGN KEY (id_servidor) REFERENCES servidor(id)
+);
+
+-- Índice para otimizar busca pelo código da caixa (opcional)
+CREATE INDEX idx_arquivo_nb ON arquivo(nb);
+CREATE INDEX idx_arquivo_idsegurado ON arquivo(id_segurado);
+CREATE INDEX idx_arquivo_codcaixa ON arquivo(cod_caixa);
+-- Tabela Servidor
+CREATE TYPE tipo_perfil AS ENUM ('ARQUIVISTA', 'GERENTE');
+
+CREATE TABLE servidor (
+    id SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    senha VARCHAR(255) NOT NULL,
+    matricula INTEGER NOT NULL UNIQUE,
+    tipo_perfil tipo_perfil NOT NULL,
+    status_perfil BOOLEAN NOT NULL DEFAULT TRUE,
+    pode_cadastrar BOOLEAN NOT NULL DEFAULT FALSE,
+    pode_alterar BOOLEAN NOT NULL DEFAULT FALSE,
+    pode_alterar_nome_segurado BOOLEAN NOT NULL DEFAULT FALSE,
+    pode_alterar_caixa BOOLEAN NOT NULL DEFAULT FALSE,
+    pode_alterar_cpf_nb BOOLEAN NOT NULL DEFAULT FALSE,
+    pode_alterar_local_caixa BOOLEAN NOT NULL DEFAULT FALSE,
+    pode_alterar_codigo_caixa BOOLEAN NOT NULL DEFAULT FALSE,
+    pode_excluir BOOLEAN NOT NULL DEFAULT FALSE
+);
+

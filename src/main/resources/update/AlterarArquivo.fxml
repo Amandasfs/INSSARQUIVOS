@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.text.Font?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="inss.gca.mogi.mogi.controller.update.AlterarArquivoController"
+            prefHeight="400.0" prefWidth="600.0">
+    <children>
+        <Label layoutX="32.0" layoutY="25.0" text="CADASTRAR ARQUIVO" textFill="#044793">
+            <font>
+                <Font name="System Bold" size="26.0" />
+            </font>
+        </Label>
+        <TextField fx:id="numCaixa" layoutX="224.0" layoutY="246.0" prefHeight="37.0" prefWidth="89.0"
+                   promptText="Caixa" editable="false" style="-fx-border-color: #044793; -fx-text-fill: #044793;" />
+        <TextField fx:id="cpf" layoutX="24.0" layoutY="127.0" prefHeight="37.0" prefWidth="284.0" promptText="CPF" style="-fx-border-color: #044793; -fx-text-fill: #044793;" />
+        <TextField fx:id="nb" layoutX="24.0" layoutY="246.0" prefHeight="37.0" prefWidth="196.0"
+                   promptText="Número de Benefício" editable="false" style="-fx-border-color: #044793; -fx-text-fill: #044793;" />
+        <Label layoutX="20.0" layoutY="172.0" text="Tipo de benefício:" textFill="#044793">
+            <font>
+                <Font size="14.0" />
+            </font>
+        </Label>
+        <ChoiceBox fx:id="tipoSelect" layoutX="24.0" layoutY="192.0" prefHeight="37.0" prefWidth="117.0" style="-fx-background-color: white; -fx-border-color: #044793; -fx-cursor: hand;" />
+        <TextField fx:id="viewTipoBeneficioField" editable="false" layoutX="149.0" layoutY="192.0" prefHeight="37.0" prefWidth="162.0" style="-fx-border-color: #044793; -fx-text-fill: #044793;" />
+        <TextField fx:id="nomeSegurado" layoutX="24.0" layoutY="79.0" prefHeight="37.0" prefWidth="284.0" promptText="Segurado" style="-fx-border-color: #044793; -fx-text-fill: #044793;" />
+        <TextField fx:id="aps" layoutX="24.0" layoutY="298.0" prefHeight="37.0" prefWidth="125.0" promptText="APS" style="-fx-border-color: #044793; -fx-text-fill: #044793;" text="Mogi Das Cruzes" />
+        <Button fx:id="cadastrarButton" onAction="#cadastrar" layoutX="159.0" layoutY="298.0" prefHeight="37.0" prefWidth="152.0" style="-fx-background-color: #044793; -fx-alignment: center; -fx-cursor: hand;" text="CADASTRAR" textFill="WHITE">
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font>
+        </Button>
+    </children>
+</AnchorPane>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<?import javafx.scene.text.Font?>
+<AnchorPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="inss.gca.mogi.mogi.controller.select.SelectCadArquivoController"
+            prefHeight="400.0" prefWidth="600.0">
+    <children>
+        <TextField fx:id="codCaixaField" layoutX="138.0" layoutY="123.0" prefHeight="40.0" prefWidth="293.0" promptText="Código da Caixa" style="-fx-border-color: #005cb9; -fx-text-fill: #005cb9;" />
+        <TextField fx:id="nbField" layoutX="138.0" layoutY="200.0" prefHeight="40.0" prefWidth="293.0" promptText="XXX.XXX.XXX-X" style="-fx-border-color: #005cb9; -fx-text-fill: #005cb9;" />
+        <Label layoutX="28.0" layoutY="33.0" text="Em qual caixa deseja cadastrar o arquivo? " textFill="#044793">
+            <font>
+                <Font name="System Bold" size="26.0" />
+            </font>
+        </Label>
+        <Label layoutX="129.0" layoutY="70.0" text="Selecione a caixa em que deseja cadastrar o arquivo" textFill="#044793">
+            <font>
+                <Font size="14.0" />
+            </font>
+        </Label>
+        <Button fx:id="adicionarButton" onAction="#adicionarArquivo"  layoutX="237.0" layoutY="256.0" prefHeight="37.0" prefWidth="95.0" style="-fx-background-color: #044793; -fx-alignment: center; -fx-cursor: hand;" text="ADICIONAR" textFill="WHITE">
+            <font>
+                <Font name="System Bold" size="12.0" />
+            </font>
+        </Button>
+        <Label layoutX="138.0" layoutY="103.0" text="CAIXA" textFill="#044793">
+            <font>
+                <Font size="14.0" />
+            </font>
+        </Label>
+        <Label layoutX="138.0" layoutY="180.0" text="NB" textFill="#044793">
+            <font>
+                <Font size="14.0" />
+            </font>
+        </Label>
+    </children>
+</AnchorPane>
