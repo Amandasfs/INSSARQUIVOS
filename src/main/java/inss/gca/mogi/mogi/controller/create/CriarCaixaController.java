@@ -1,9 +1,11 @@
 package inss.gca.mogi.mogi.controller.create;
 
+import inss.gca.mogi.mogi.dao.CaixaDAO;
 import inss.gca.mogi.mogi.model.Caixa;
 import inss.gca.mogi.mogi.security.PermissaoValidator;
 import inss.gca.mogi.mogi.service.CaixaService;
 import inss.gca.mogi.mogi.util.AlertaUtil;
+import inss.gca.mogi.mogi.util.Sessao;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -25,11 +27,11 @@ public class CriarCaixaController {
     @FXML private Button cadastrarButton;
 
     private final CaixaService caixaService = new CaixaService();
+    private CaixaService caixaService;
 
-    // Simulação de usuário logado, ajuste para obter do contexto real
-    private final int idServidorLogado = 1;
-    private final String perfilUsuarioLogado = "GERENTE";
-
+    public CriarCaixaController() {
+        this.caixaService = new CaixaService(new CaixaDAO());
+    }
     @FXML
     public void initialize() {
         configurarCampos();
@@ -85,9 +87,8 @@ public class CriarCaixaController {
 
     private void cadastrarCaixa() {
         try {
-            // Valida se perfil está ativo e tem permissão para cadastrar
-            PermissaoValidator.validarPerfilAtivo(idServidorLogado);
-            PermissaoValidator.validarPodeCadastrar(idServidorLogado);
+            // Valida permissão (já verifica perfil ativo internamente)
+            PermissaoValidator.validarPodeCadastrar();
 
             String codCaixa = codCaixaField.getText().trim();
             String rua = ruaField.getText().trim();
@@ -134,10 +135,10 @@ public class CriarCaixaController {
             caixa.setNbInicial(nbInicialNumerico);
             caixa.setNbFinal(nbFinalNumerico);
             caixa.setAndar(andar);
-            caixa.setIdServidor(idServidorLogado);
+            caixa.setIdServidor(Sessao.getServidor().getId());
 
-            // Usa service com idServidor e perfil para validar permissões
-            caixaService.cadastrarCaixa(caixa, perfilUsuarioLogado, idServidorLogado);
+            // Service já valida permissões internamente
+            caixaService.criarCaixa(caixa);
 
             AlertaUtil.exibirInformacao("Caixa cadastrada com sucesso!");
 
@@ -149,8 +150,7 @@ public class CriarCaixaController {
             andarSelect.getSelectionModel().selectFirst();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            AlertaUtil.exibirErro("Erro ao cadastrar caixa: " + e.getMessage());
+            AlertaUtil.exibirErro(e.getMessage());
         }
     }
 

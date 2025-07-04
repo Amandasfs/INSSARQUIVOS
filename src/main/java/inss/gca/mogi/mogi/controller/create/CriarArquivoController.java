@@ -1,11 +1,16 @@
 package inss.gca.mogi.mogi.controller.create;
 
+import inss.gca.mogi.mogi.dao.ArquivoDAO;
+import inss.gca.mogi.mogi.dao.SeguradoDAO;
 import inss.gca.mogi.mogi.model.Arquivo;
 import inss.gca.mogi.mogi.model.Segurado;
+import inss.gca.mogi.mogi.model.Servidor;
+import inss.gca.mogi.mogi.security.PermissaoValidator;
 import inss.gca.mogi.mogi.service.ArquivoService;
 import inss.gca.mogi.mogi.service.SeguradoService;
 import inss.gca.mogi.mogi.service.exceptions.DataIntegrityViolationException;
 import inss.gca.mogi.mogi.service.exceptions.ObjectNotFoundException;
+import inss.gca.mogi.mogi.util.Sessao;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -47,12 +52,14 @@ public class CriarArquivoController {
     @FXML
     private Button cadastrarButton;
 
-    private final ArquivoService arquivoService = new ArquivoService();
-    private final SeguradoService seguradoService = new SeguradoService();
+    private ArquivoService arquivoService;
+    private SeguradoService seguradoService;
 
-    // ID do servidor logado (use aqui o ID e não a matrícula)
-    private final int idServidorLogado = 1;
-
+    // Injeção via construtor (ajuste para seu gerenciador de dependências)
+    public CriarArquivoController() {
+        this.arquivoService = new ArquivoService(new ArquivoDAO());
+        this.seguradoService = new SeguradoService(new SeguradoDAO());
+    }
     /**
      * Método chamado antes da abertura da tela para preencher os campos NB e Caixa.
      *
@@ -98,11 +105,15 @@ public class CriarArquivoController {
      */
     @FXML
     public void cadastrar(ActionEvent event) {
-        String nome = nomeSegurado.getText().trim();
-        String cpfSegurado = cpf.getText().trim();
-        String tipoBeneficio = tipoSelect.getValue();
-        String nbDigitado = nb.getText().trim();
-        String codCaixa = numCaixa.getText().trim();
+        try {
+            // Valida permissões primeiro
+            PermissaoValidator.validarPodeCadastrar();
+
+            String nome = nomeSegurado.getText().trim();
+            String cpfSegurado = cpf.getText().trim();
+            String tipoBeneficio = tipoSelect.getValue();
+            String nbDigitado = nb.getText().trim();
+            String codCaixa = numCaixa.getText().trim();
 
         // Remove formatação do CPF para validar
         String cpfLimpo = cpfSegurado.replaceAll("[^\\d]", "");
@@ -119,36 +130,37 @@ public class CriarArquivoController {
             return;
         }
 
-        try {
-            // Verificar se o segurado já existe pelo CPF
+            // Obtém servidor da sessão
+            Servidor servidorLogado = Sessao.getServidor();
+
+            // Verifica/cria segurado
             Segurado seguradoExistente;
             try {
-                seguradoExistente = seguradoService.buscarPorCpfUnico(cpfLimpo);
+                seguradoExistente = seguradoService.buscarPorCpf(cpfLimpo);
             } catch (ObjectNotFoundException e) {
-                // Se não existir, criar novo segurado
                 Segurado novoSegurado = new Segurado();
                 novoSegurado.setNomeSegurado(nome);
                 novoSegurado.setCpf(cpfLimpo);
-                novoSegurado.setIdServidor(idServidorLogado);
+                novoSegurado.setIdServidor(servidorLogado.getId());
                 seguradoExistente = seguradoService.criarSegurado(novoSegurado);
             }
 
-            // Criar o objeto Arquivo
+            // Cria arquivo
             Arquivo arquivo = new Arquivo();
             arquivo.setNb(nbDigitado);
             arquivo.setTipoBeneficio(tipoBeneficio);
             arquivo.setIdSegurado(seguradoExistente.getId());
             arquivo.setCodCaixa(codCaixa);
-            arquivo.setIdServidor(idServidorLogado);
+            arquivo.setIdServidor(servidorLogado.getId());
 
-            // Persistir o arquivo
-            arquivoService.criar(arquivo);
+            arquivoService.criarArquivo(arquivo);
+
 
             showAlert("Sucesso", "Arquivo cadastrado com sucesso!", Alert.AlertType.INFORMATION);
             limparCampos();
 
-        } catch (DataIntegrityViolationException e) {
-            showAlert("Erro ao salvar", e.getMessage(), Alert.AlertType.ERROR);
+        }  catch (Exception e) {
+            showAlert("Erro", e.getMessage(), Alert.AlertType.ERROR);
         } catch (Exception e) {
             showAlert("Erro inesperado", e.getMessage(), Alert.AlertType.ERROR);
         }
