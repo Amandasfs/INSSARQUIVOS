@@ -5,6 +5,7 @@ import inss.gca.mogi.mogi.config.PasswordUtil;
 import inss.gca.mogi.mogi.model.LogServidor;
 import inss.gca.mogi.mogi.model.Servidor;
 import inss.gca.mogi.mogi.model.TipoPerfil;
+import inss.gca.mogi.mogi.security.PermissaoValidator;
 import inss.gca.mogi.mogi.service.exceptions.DataIntegrityViolationException;
 import inss.gca.mogi.mogi.service.exceptions.ObjectNotFoundException;
 
@@ -101,10 +102,14 @@ public class ServidorDAO {
      * Atualiza permissões de um servidor.
      * Apenas gerentes devem ter acesso a esta operação.
      */
-    public void atualizarPermissoes(Servidor servidor, int gerenteId) {
-        String sql = "UPDATE servidor SET pode_cadastrar = ?, pode_alterar = ?, pode_alterar_nome_segurado = ?, " +
-                "pode_alterar_caixa = ?, pode_alterar_cpf_nb = ?, pode_alterar_local_caixa = ?, " +
-                "pode_alterar_codigo_caixa = ?, pode_excluir = ? WHERE matricula = ?";
+    public void atualizarPermissoes(Servidor servidor) {
+        PermissaoValidator.validarGerente(); // Só gerentes podem chamar este método
+
+        String sql = "UPDATE servidor SET pode_cadastrar = ?, pode_alterar = ?, "
+                + "pode_alterar_nome_segurado = ?, pode_alterar_caixa = ?, "
+                + "pode_alterar_cpf_nb = ?, pode_alterar_local_caixa = ?, "
+                + "pode_alterar_codigo_caixa = ?, pode_excluir = ? "
+                + "WHERE id = ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -117,19 +122,12 @@ public class ServidorDAO {
             stmt.setBoolean(6, servidor.isPodeAlterarLocalCaixa());
             stmt.setBoolean(7, servidor.isPodeAlterarCodigoCaixa());
             stmt.setBoolean(8, servidor.isPodeExcluir());
-            stmt.setInt(9, servidor.getMatricula());  // usa matrícula no WHERE
+            stmt.setInt(9, servidor.getId());
 
             stmt.executeUpdate();
 
-            logDAO.registrarLog(new LogServidor(
-                    gerenteId,
-                    "ATUALIZAR_PERMISSOES",
-                    LocalDateTime.now(),
-                    "Servidor matrícula: " + servidor.getMatricula()
-            ));
-
         } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao atualizar permissões", e);
+            throw new RuntimeException("Erro ao atualizar permissões", e);
         }
     }
 
@@ -221,69 +219,62 @@ public class ServidorDAO {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                return popularServidor(rs);
-            } else {
-                throw new ObjectNotFoundException("Servidor com matrícula " + matricula + " não encontrado.");
+                Servidor servidor = popularServidor(rs);
+                servidor.definirPermissoesPadrao(); // Garante permissões consistentes
+                return servidor;
             }
+            throw new ObjectNotFoundException("Servidor não encontrado");
 
         } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao buscar servidor por matrícula", e);
+            throw new RuntimeException("Erro ao buscar servidor", e);
         }
     }
 
-    /**
-     * Busca um servidor por matrícula (String).
-     * Útil para autenticação onde matrícula pode vir como String.
-     */
-    public Servidor buscarPorMatricula(String matricula) {
-        String sql = "SELECT * FROM servidor WHERE CAST(matricula AS TEXT) = ?";
-
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setString(1, matricula);
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                return popularServidor(rs);
-            } else {
-                throw new ObjectNotFoundException("Servidor com matrícula " + matricula + " não encontrado.");
-            }
-
-        } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao buscar servidor por matrícula", e);
-        }
-    }
-
-    /**
-     * Autentica um servidor com base na matrícula e senha.
-     * Retorna o objeto Servidor se as credenciais forem válidas.
-     */
     public Servidor autenticar(String matricula, String senha) {
-        String sql = "SELECT * FROM servidor WHERE CAST(matricula AS TEXT) = ?";
+        String sql = "SELECT * FROM servidor WHERE matricula = ? AND senha = ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, matricula);
+            stmt.setString(2, PasswordUtil.hashPassword(senha));
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
-                String hashArmazenado = rs.getString("senha");
-                if (PasswordUtil.checkPassword(senha, hashArmazenado)) {
-                    return popularServidor(rs);
-                } else {
-                    throw new ObjectNotFoundException("Senha incorreta para a matrícula fornecida.");
-                }
-            } else {
-                throw new ObjectNotFoundException("Servidor com a matrícula " + matricula + " não encontrado.");
+                Servidor servidor = popularServidor(rs);
+                servidor.definirPermissoesPadrao();
+                return servidor;
             }
+            throw new ObjectNotFoundException("Credenciais inválidas");
 
         } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao autenticar servidor", e);
+            throw new RuntimeException("Erro ao autenticar", e);
         }
     }
+    /**
+     * Popular objeto Servidor a partir do ResultSet.
+     */
+    private Servidor popularServidor(ResultSet rs) throws SQLException {
+        Servidor servidor = new Servidor();
+        servidor.setId(rs.getInt("id"));
+        servidor.setNome(rs.getString("nome"));
+        servidor.setSenha(rs.getString("senha"));
+        servidor.setMatricula(rs.getInt("matricula"));
+        servidor.setTipoPerfil(TipoPerfil.valueOf(rs.getString("tipo_perfil")));
+        servidor.setStatusPerfil(rs.getBoolean("status_perfil"));
 
+        // Permissões
+        servidor.setPodeCadastrar(rs.getBoolean("pode_cadastrar"));
+        servidor.setPodeAlterar(rs.getBoolean("pode_alterar"));
+        servidor.setPodeAlterarNomeSegurado(rs.getBoolean("pode_alterar_nome_segurado"));
+        servidor.setPodeAlterarCaixa(rs.getBoolean("pode_alterar_caixa"));
+        servidor.setPodeAlterarCpfNb(rs.getBoolean("pode_alterar_cpf_nb"));
+        servidor.setPodeAlterarLocalCaixa(rs.getBoolean("pode_alterar_local_caixa"));
+        servidor.setPodeAlterarCodigoCaixa(rs.getBoolean("pode_alterar_codigo_caixa"));
+        servidor.setPodeExcluir(rs.getBoolean("pode_excluir"));
+
+        return servidor;
+    }
     /**
      * Gera uma lista completa de todos os servidores cadastrados no sistema.
      */
@@ -306,27 +297,6 @@ public class ServidorDAO {
         }
     }
 
-    /**
-     * Popular objeto Servidor a partir do ResultSet.
-     */
-    private Servidor popularServidor(ResultSet rs) throws SQLException {
-        Servidor servidor = new Servidor();
-        servidor.setId(rs.getInt("id"));
-        servidor.setNome(rs.getString("nome"));
-        servidor.setMatricula(rs.getInt("matricula"));
-        servidor.setSenha(rs.getString("senha"));
-        servidor.setTipoPerfil(TipoPerfil.valueOf(rs.getString("tipo_perfil")));
-        servidor.setStatusPerfil(rs.getBoolean("status_perfil"));
-        servidor.setPodeCadastrar(rs.getBoolean("pode_cadastrar"));
-        servidor.setPodeAlterar(rs.getBoolean("pode_alterar"));
-        servidor.setPodeAlterarNomeSegurado(rs.getBoolean("pode_alterar_nome_segurado"));
-        servidor.setPodeAlterarCaixa(rs.getBoolean("pode_alterar_caixa"));
-        servidor.setPodeAlterarCpfNb(rs.getBoolean("pode_alterar_cpf_nb"));
-        servidor.setPodeAlterarLocalCaixa(rs.getBoolean("pode_alterar_local_caixa"));
-        servidor.setPodeAlterarCodigoCaixa(rs.getBoolean("pode_alterar_codigo_caixa"));
-        servidor.setPodeExcluir(rs.getBoolean("pode_excluir"));
-        return servidor;
-    }
     /**
      * Reativa um servidor no sistema (altera status_perfil para true).
      * Apenas gerentes devem ter acesso a esta operação.

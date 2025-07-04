@@ -3,6 +3,7 @@ package inss.gca.mogi.mogi.dao;
 import inss.gca.mogi.mogi.config.DatabaseConfig;
 import inss.gca.mogi.mogi.dto.CaixaDTO;
 import inss.gca.mogi.mogi.model.Caixa;
+import inss.gca.mogi.mogi.security.PermissaoValidator;
 import inss.gca.mogi.mogi.service.exceptions.DataIntegrityViolationException;
 import inss.gca.mogi.mogi.service.exceptions.ObjectNotFoundException;
 
@@ -22,14 +23,15 @@ public class CaixaDAO {
      * @param caixa objeto Caixa a ser cadastrado
      * @throws DataIntegrityViolationException em caso de erro SQL durante a inserção
      */
-    public void cadastrar(Caixa caixa) {
-        String sql = "INSERT INTO caixa (cod_caixa, prateleira, rua, andar, nb_inicial, nb_final, id_servidor) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    public void criar(Caixa caixa) {
+        PermissaoValidator.validarPodeCadastrar();
 
-        // Usa try-with-resources para garantir fechamento automático de recursos
+        String sql = "INSERT INTO caixa (cod_caixa, prateleira, rua, andar, nb_inicial, nb_final, id_servidor) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            // Configura parâmetros da consulta para evitar SQL Injection
             stmt.setString(1, caixa.getCodCaixa());
             stmt.setInt(2, caixa.getPrateleira());
             stmt.setString(3, caixa.getRua());
@@ -41,8 +43,7 @@ public class CaixaDAO {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
-            // Lança exceção personalizada para tratamento na camada superior
-            throw new DataIntegrityViolationException("Erro ao cadastrar caixa", e);
+            throw new RuntimeException("Erro ao criar caixa", e);
         }
     }
 
@@ -358,5 +359,43 @@ public class CaixaDAO {
         }
 
         return caixaDto;
+    }
+    public void atualizarLocalizacao(String codCaixa, String novoLocal) {
+        int idServidor = obterIdServidorPorCaixa(codCaixa);
+        PermissaoValidator.validarPodeAlterarLocalCaixa(idServidor);
+
+        String sql = "UPDATE caixa SET rua = ?, andar = ? WHERE cod_caixa = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            String[] partes = novoLocal.split("-");
+            stmt.setString(1, partes[0]);
+            stmt.setString(2, partes[1]);
+            stmt.setString(3, codCaixa);
+
+            stmt.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao atualizar localização", e);
+        }
+    }
+    private int obterIdServidorPorCaixa(String codCaixa) {
+        String sql = "SELECT id_servidor FROM caixa WHERE cod_caixa = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, codCaixa);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("id_servidor");
+            }
+            throw new RuntimeException("Caixa não encontrada");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar servidor", e);
+        }
     }
 }

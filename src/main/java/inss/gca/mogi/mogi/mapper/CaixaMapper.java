@@ -5,6 +5,8 @@ import inss.gca.mogi.mogi.model.Caixa;
 
 public class CaixaMapper {
     public static CaixaDTO toDto(Caixa caixa) {
+        if (caixa == null) return null;
+
         CaixaDTO dto = new CaixaDTO();
         dto.setCodCaixa(caixa.getCodCaixa());
         dto.setPrateleira(caixa.getPrateleira());
@@ -17,6 +19,8 @@ public class CaixaMapper {
     }
 
     public static Caixa toEntity(CaixaDTO dto) {
+        if (dto == null) return null;
+
         Caixa caixa = new Caixa();
         caixa.setCodCaixa(dto.getCodCaixa());
         caixa.setPrateleira(dto.getPrateleira());

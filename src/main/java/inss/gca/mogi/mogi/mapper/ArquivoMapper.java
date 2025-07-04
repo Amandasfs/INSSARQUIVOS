@@ -5,6 +5,8 @@ import inss.gca.mogi.mogi.model.Arquivo;
 
 public class ArquivoMapper {
     public static ArquivoDTO toDto(Arquivo arquivo) {
+        if (arquivo == null) return null;
+
         ArquivoDTO dto = new ArquivoDTO();
         dto.setId(arquivo.getId());
         dto.setNb(arquivo.getNb());
@@ -16,6 +18,8 @@ public class ArquivoMapper {
     }
 
     public static Arquivo toEntity(ArquivoDTO dto) {
+        if (dto == null) return null;
+
         Arquivo arquivo = new Arquivo();
         arquivo.setId(dto.getId());
         arquivo.setNb(dto.getNb());

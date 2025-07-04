@@ -5,6 +5,8 @@ import inss.gca.mogi.mogi.model.Segurado;
 
 public class SeguradoMapper {
     public static SeguradoDTO toDto(Segurado segurado) {
+        if (segurado == null) return null;
+
         SeguradoDTO dto = new SeguradoDTO();
         dto.setId(segurado.getId());
         dto.setNomeSegurado(segurado.getNomeSegurado());
@@ -14,6 +16,8 @@ public class SeguradoMapper {
     }
 
     public static Segurado toEntity(SeguradoDTO dto) {
+        if (dto == null) return null;
+
         Segurado segurado = new Segurado();
         segurado.setId(dto.getId());
         segurado.setNomeSegurado(dto.getNomeSegurado());

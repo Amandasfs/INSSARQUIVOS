@@ -16,15 +16,20 @@ public class Servidor {
     private boolean podeAlterarCodigoCaixa;
     private boolean podeExcluir;
 
+    // Construtor principal - melhorado
     public Servidor(int id, String nome, String senha, int matricula, TipoPerfil tipoPerfil) {
         this.id = id;
         this.nome = nome;
         this.senha = senha;
         this.matricula = matricula;
-        this.tipoPerfil = tipoPerfil;
+        this.setTipoPerfil(tipoPerfil); // Chama definirPermissoesPadrao() via setter
     }
 
-    public Servidor(boolean statusPerfil, boolean podeCadastrar, boolean podeAlterar, boolean podeAlterarNomeSegurado, boolean podeAlterarCaixa, boolean podeAlterarCpfNb, boolean podeAlterarLocalCaixa, boolean podeAlterarCodigoCaixa, boolean podeExcluir) {
+    // Construtor de permissões - agora chama definirPermissoesPadrao()
+    public Servidor(boolean statusPerfil, boolean podeCadastrar, boolean podeAlterar,
+                    boolean podeAlterarNomeSegurado, boolean podeAlterarCaixa,
+                    boolean podeAlterarCpfNb, boolean podeAlterarLocalCaixa,
+                    boolean podeAlterarCodigoCaixa, boolean podeExcluir) {
         this.statusPerfil = statusPerfil;
         this.podeCadastrar = podeCadastrar;
         this.podeAlterar = podeAlterar;
@@ -36,8 +41,67 @@ public class Servidor {
         this.podeExcluir = podeExcluir;
     }
 
-    public Servidor() {
+    public Servidor() {}
 
+    // Método mais robusto para definir permissões
+    public void definirPermissoesPadrao() {
+        if (this.tipoPerfil == null) {
+            this.resetarPermissoes();
+            return;
+        }
+
+        switch (this.tipoPerfil) {
+            case GERENTE:
+                this.concederTodasPermissoes();
+                break;
+            case ARQUIVISTA:
+                this.resetarPermissoes();
+                this.podeCadastrar = true; // Permissão mínima padrão
+                break;
+            default:
+                this.resetarPermissoes();
+        }
+    }
+
+    private void resetarPermissoes() {
+        this.podeCadastrar = false;
+        this.podeAlterar = false;
+        this.podeExcluir = false;
+        this.podeAlterarNomeSegurado = false;
+        this.podeAlterarCaixa = false;
+        this.podeAlterarCpfNb = false;
+        this.podeAlterarLocalCaixa = false;
+        this.podeAlterarCodigoCaixa = false;
+    }
+
+    private void concederTodasPermissoes() {
+        this.podeCadastrar = true;
+        this.podeAlterar = true;
+        this.podeExcluir = true;
+        this.podeAlterarNomeSegurado = true;
+        this.podeAlterarCaixa = true;
+        this.podeAlterarCpfNb = true;
+        this.podeAlterarLocalCaixa = true;
+        this.podeAlterarCodigoCaixa = true;
+    }
+
+    // Método de verificação de permissão otimizado
+    public boolean temPermissao(String acao) {
+        if (this.isGerente()) return true;
+
+        try {
+            return (boolean) this.getClass()
+                    .getMethod("is" + acao)
+                    .invoke(this);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    // Setters estratégicos
+    public void setTipoPerfil(TipoPerfil tipoPerfil) {
+        this.tipoPerfil = tipoPerfil;
+        this.definirPermissoesPadrao();
     }
 
     public int getId() {
@@ -74,10 +138,6 @@ public class Servidor {
 
     public TipoPerfil getTipoPerfil() {
         return tipoPerfil;
-    }
-
-    public void setTipoPerfil(TipoPerfil tipoPerfil) {
-        this.tipoPerfil = tipoPerfil;
     }
 
     public boolean isStatusPerfil() {
@@ -152,8 +212,8 @@ public class Servidor {
         this.podeExcluir = podeExcluir;
     }
 
+    // Método de verificação de gerente
     public boolean isGerente() {
-        return this.tipoPerfil == TipoPerfil.GERENTE;
+        return TipoPerfil.GERENTE.equals(this.tipoPerfil);
     }
-
 }

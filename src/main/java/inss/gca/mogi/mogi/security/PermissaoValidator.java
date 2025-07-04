@@ -1,90 +1,95 @@
 package inss.gca.mogi.mogi.security;
 
-import inss.gca.mogi.mogi.dao.ServidorDAO;
 import inss.gca.mogi.mogi.model.Servidor;
 import inss.gca.mogi.mogi.service.exceptions.AuthorizationException;
 import inss.gca.mogi.mogi.util.Sessao;
 
 /**
  * Classe utilitária para validação centralizada de permissões de servidores.
+ * Versão otimizada para trabalhar com o novo sistema de permissões.
  */
 public class PermissaoValidator {
 
-    private static final ServidorDAO servidorDAO = new ServidorDAO();
-
     public static void validarPodeCadastrar() {
-        Servidor servidor = Sessao.getServidor();
-        if (servidor == null || (!servidor.isPodeCadastrar() && !servidor.isGerente())) {
-            throw new AuthorizationException("Servidor não tem permissão para cadastrar.");
-        }
+        validarAcao("PodeCadastrar");
     }
 
-    public static void validarPodeAlterar(int matricula) {
-        Servidor servidor = Sessao.getServidor();
-        if (!servidor.isPodeAlterar() && !servidor.isGerente()) {
-            throw new AuthorizationException("Servidor não tem permissão para alterar.");
-        }
+    public static void validarPodeAlterar() {
+        validarAcao("PodeAlterar");
     }
 
-    public static void validarPodeAlterarNomeSegurado(int matricula) {
-        Servidor servidor = Sessao.getServidor();
-        if (!servidor.isPodeAlterarNomeSegurado() && !servidor.isGerente()) {
-            throw new AuthorizationException("Servidor não tem permissão para alterar nome do segurado.");
-        }
+    public static void validarPodeAlterarNomeSegurado() {
+        validarAcao("PodeAlterarNomeSegurado");
     }
 
-    public static void validarPodeAlterarCaixa(int matricula) {
-        Servidor servidor = Sessao.getServidor();
-        if (!servidor.isPodeAlterarCaixa() && !servidor.isGerente()) {
-            throw new AuthorizationException("Servidor não tem permissão para alterar caixa.");
-        }
+    public static void validarPodeAlterarCaixa() {
+        validarAcao("PodeAlterarCaixa");
     }
 
-    public static void validarPodeAlterarCpfNb(int matricula) {
-        Servidor servidor = Sessao.getServidor();
-        if (!servidor.isPodeAlterarCpfNb() && !servidor.isGerente()) {
-            throw new AuthorizationException("Servidor não tem permissão para alterar CPF/NB.");
-        }
+    public static void validarPodeAlterarCpfNb() {
+        validarAcao("PodeAlterarCpfNb");
     }
 
-    public static void validarPodeAlterarLocalCaixa(int matricula) {
-        Servidor servidor = Sessao.getServidor();
-        if (!servidor.isPodeAlterarLocalCaixa() && !servidor.isGerente()) {
-            throw new AuthorizationException("Servidor não tem permissão para alterar local da caixa.");
-        }
+    public static void validarPodeAlterarLocalCaixa() {
+        validarAcao("PodeAlterarLocalCaixa");
     }
 
-    public static void validarPodeAlterarCodigoCaixa(int matricula) {
-        Servidor servidor = Sessao.getServidor();
-        if (!servidor.isPodeAlterarCodigoCaixa() && !servidor.isGerente()) {
-            throw new AuthorizationException("Servidor não tem permissão para alterar código da caixa.");
-        }
+    public static void validarPodeAlterarCodigoCaixa() {
+        validarAcao("PodeAlterarCodigoCaixa");
     }
 
-    public static void validarPodeExcluir(int matricula) {
-        Servidor servidor = Sessao.getServidor();
-        if (!servidor.isPodeExcluir() && !servidor.isGerente()) {
-            throw new AuthorizationException("Servidor não tem permissão para excluir.");
-        }
+    public static void validarPodeExcluir() {
+        validarAcao("PodeExcluir");
     }
 
-    public static void validarPerfilAtivo(int matricula) {
+    public static void validarPerfilAtivo() {
         Servidor servidor = Sessao.getServidor();
+        if (servidor == null) {
+            throw new AuthorizationException("Nenhum usuário autenticado.");
+        }
         if (!servidor.isStatusPerfil() && !servidor.isGerente()) {
             throw new AuthorizationException("Perfil do servidor está inativo.");
         }
     }
 
+    public static void validarPodeReativarPerfil() {
+        validarGerente();
+    }
+
     /**
-     * Valida se o servidor tem permissão para reativar perfis de outros servidores.
-     * Apenas gerentes podem reativar perfis.
-     *
-     * @param matricula matrícula do servidor que está tentando reativar
+     * Valida se o servidor tem permissão para uma ação específica
+     * @param acao Nome da ação (deve corresponder ao nome do método isPodeXxx no Servidor)
      */
-    public static void validarPodeReativarPerfil(int matricula) {
+    public static void validarAcao(String acao) {
         Servidor servidor = Sessao.getServidor();
-        if (!servidor.isGerente()) {
-            throw new AuthorizationException("Somente gerentes podem reativar perfis de servidores.");
+        if (servidor == null) {
+            throw new AuthorizationException("Nenhum usuário autenticado.");
+        }
+        if (!servidor.temPermissao(acao)) {
+            throw new AuthorizationException("Acesso negado para: " + acao);
+        }
+    }
+
+    /**
+     * Valida se o usuário atual é gerente
+     */
+    public static void validarGerente() {
+        Servidor servidor = Sessao.getServidor();
+        if (servidor == null || !servidor.isGerente()) {
+            throw new AuthorizationException("Apenas gerentes podem executar esta ação.");
+        }
+    }
+
+    /**
+     * Valida se o usuário tem permissão para a ação OU é gerente
+     */
+    public static void validarAcaoOuGerente(String acao) {
+        Servidor servidor = Sessao.getServidor();
+        if (servidor == null) {
+            throw new AuthorizationException("Nenhum usuário autenticado.");
+        }
+        if (!servidor.isGerente() && !servidor.temPermissao(acao)) {
+            throw new AuthorizationException("Acesso negado para: " + acao);
         }
     }
 }

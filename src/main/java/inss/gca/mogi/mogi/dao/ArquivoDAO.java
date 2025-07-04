@@ -21,26 +21,27 @@ public class ArquivoDAO {
      * Cria um novo arquivo no banco de dados após validar permissões.
      */
     public void criar(Arquivo arquivo) {
-        try {
-            PermissaoValidator.validarPodeCadastrar(arquivo.getIdServidor());
+        PermissaoValidator.validarPodeCadastrar();
 
-            String sql = "INSERT INTO arquivo (nb, tipo_beneficio, id_segurado, cod_caixa, id_servidor) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO arquivo (nb, tipo_beneficio, id_segurado, cod_caixa, id_servidor) "
+                + "VALUES (?, ?, ?, ?, ?)";
 
-            try (Connection conn = DatabaseConfig.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-                stmt.setString(1, arquivo.getNb());
-                stmt.setString(2, arquivo.getTipoBeneficio());
-                stmt.setInt(3, arquivo.getIdSegurado());
-                stmt.setString(4, arquivo.getCodCaixa());
-                stmt.setInt(5, arquivo.getIdServidor());
+            stmt.setString(1, arquivo.getNb());
+            stmt.setString(2, arquivo.getTipoBeneficio());
+            stmt.setInt(3, arquivo.getIdSegurado());
+            stmt.setString(4, arquivo.getCodCaixa());
+            stmt.setInt(5, arquivo.getIdServidor());
 
-                stmt.executeUpdate();
-            }
+            stmt.executeUpdate();
+
         } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao criar arquivo.", e);
+            throw new RuntimeException("Erro ao criar arquivo", e);
         }
     }
+
 
     /**
      * Atualiza os dados de um arquivo no banco de dados.
@@ -135,22 +136,22 @@ public class ArquivoDAO {
         throw new ObjectNotFoundException("Arquivo não cadastrado nem pertence a nenhuma caixa para NB: " + nb);
     }
 
-    public int obterIdServidorPorArquivo(int idArquivo) {
+    private int obterIdServidorPorArquivo(int idArquivo) {
         String sql = "SELECT id_servidor FROM arquivo WHERE id = ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, idArquivo);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("id_servidor");
-                } else {
-                    throw new ObjectNotFoundException("Arquivo não encontrado. ID: " + idArquivo);
-                }
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt("id_servidor");
             }
+            throw new RuntimeException("Arquivo não encontrado");
+
         } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao buscar ID do servidor pelo arquivo.", e);
+            throw new RuntimeException("Erro ao buscar servidor", e);
         }
     }
 
@@ -174,24 +175,21 @@ public class ArquivoDAO {
     /**
      * Atualiza apenas o NB de um arquivo, com validação de permissão.
      */
-    public void atualizarNb(int id, String novoNb) {
+    public void atualizarNB(int id, String novoNB) {
         int idServidor = obterIdServidorPorArquivo(id);
+        PermissaoValidator.validarPodeAlterarCpfNb(idServidor);
 
-        try {
-            PermissaoValidator.validarPodeAlterarCpfNb(idServidor);
+        String sql = "UPDATE arquivo SET nb = ? WHERE id = ?";
 
-            String sql = "UPDATE arquivo SET nb = ? WHERE id = ?";
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            try (Connection conn = DatabaseConfig.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, novoNB);
+            stmt.setInt(2, id);
+            stmt.executeUpdate();
 
-                stmt.setString(1, novoNb);
-                stmt.setInt(2, id);
-
-                stmt.executeUpdate();
-            }
         } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao atualizar NB do arquivo.", e);
+            throw new RuntimeException("Erro ao atualizar NB", e);
         }
     }
 

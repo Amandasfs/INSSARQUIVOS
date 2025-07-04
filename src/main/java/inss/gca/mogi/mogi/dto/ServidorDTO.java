@@ -17,76 +17,25 @@ public class ServidorDTO {
     private boolean podeAlterarCodigoCaixa;
     private boolean podeExcluir;
 
-    public ServidorDTO(int id, String nome, int matricula, TipoPerfil tipoPerfil, boolean statusPerfil) {
-        this.id = id;
-        this.nome = nome;
-        this.matricula = matricula;
-        this.tipoPerfil = tipoPerfil;
-        this.statusPerfil = statusPerfil;
-    }
+    // Getters e Setters
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public ServidorDTO(boolean podeCadastrar, boolean podeAlterar, boolean podeAlterarNomeSegurado, boolean podeAlterarCaixa, boolean podeAlterarCpfNb, boolean podeAlterarLocalCaixa, boolean podeAlterarCodigoCaixa, boolean podeExcluir) {
-        this.podeCadastrar = podeCadastrar;
-        this.podeAlterar = podeAlterar;
-        this.podeAlterarNomeSegurado = podeAlterarNomeSegurado;
-        this.podeAlterarCaixa = podeAlterarCaixa;
-        this.podeAlterarCpfNb = podeAlterarCpfNb;
-        this.podeAlterarLocalCaixa = podeAlterarLocalCaixa;
-        this.podeAlterarCodigoCaixa = podeAlterarCodigoCaixa;
-        this.podeExcluir = podeExcluir;
-    }
+    public String getNome() { return nome; }
+    public void setNome(String nome) { this.nome = nome; }
 
-    public ServidorDTO() {
+    public int getMatricula() { return matricula; }
+    public void setMatricula(int matricula) { this.matricula = matricula; }
 
-    }
+    public TipoPerfil getTipoPerfil() { return tipoPerfil; }
+    public void setTipoPerfil(TipoPerfil tipoPerfil) { this.tipoPerfil = tipoPerfil; }
 
-    public int getId() {
-        return id;
-    }
+    public boolean isStatusPerfil() { return statusPerfil; }
+    public void setStatusPerfil(boolean statusPerfil) { this.statusPerfil = statusPerfil; }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public int getMatricula() {
-        return matricula;
-    }
-
-    public void setMatricula(int matricula) {
-        this.matricula = matricula;
-    }
-
-    public TipoPerfil getTipoPerfil() {
-        return tipoPerfil;
-    }
-
-    public void setTipoPerfil(TipoPerfil tipoPerfil) {
-        this.tipoPerfil = tipoPerfil;
-    }
-
-    public boolean isStatusPerfil() {
-        return statusPerfil;
-    }
-
-    public void setStatusPerfil(boolean statusPerfil) {
-        this.statusPerfil = statusPerfil;
-    }
-
-    public boolean isPodeCadastrar() {
-        return podeCadastrar;
-    }
-
-    public void setPodeCadastrar(boolean podeCadastrar) {
-        this.podeCadastrar = podeCadastrar;
-    }
+    // Permissões
+    public boolean isPodeCadastrar() { return podeCadastrar; }
+    public void setPodeCadastrar(boolean podeCadastrar) { this.podeCadastrar = podeCadastrar; }
 
     public boolean isPodeAlterar() {
         return podeAlterar;
@@ -142,5 +91,10 @@ public class ServidorDTO {
 
     public void setPodeExcluir(boolean podeExcluir) {
         this.podeExcluir = podeExcluir;
+    }
+
+    // Método auxiliar para verificação no front-end
+    public boolean isGerente() {
+        return tipoPerfil != null && tipoPerfil.equals(TipoPerfil.GERENTE);
     }
 }

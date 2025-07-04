@@ -4,3 +4,4 @@ public enum TipoPerfil {
     ARQUIVISTA,
     GERENTE
 }
+

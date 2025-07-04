@@ -22,30 +22,30 @@ public class SeguradoDAO {
      * @param segurado objeto com os dados a serem inseridos.
      */
     public void criar(Segurado segurado) {
-        try {
-            PermissaoValidator.validarPodeCadastrar(segurado.getIdServidor());
+        PermissaoValidator.validarPodeCadastrar();
 
-            String sql = "INSERT INTO segurado (nome_segurado, cpf, id_servidor) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO segurado (nome_segurado, cpf, id_servidor) VALUES (?, ?, ?)";
 
-            try (Connection conn = DatabaseConfig.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
-                stmt.setString(1, segurado.getNomeSegurado());
-                stmt.setString(2, segurado.getCpf());
-                stmt.setInt(3, segurado.getIdServidor());
+            stmt.setString(1, segurado.getNomeSegurado());
+            stmt.setString(2, segurado.getCpf());
+            stmt.setInt(3, segurado.getIdServidor());
 
-                stmt.executeUpdate();
+            stmt.executeUpdate();
 
-                try (ResultSet rs = stmt.getGeneratedKeys()) {
-                    if (rs.next()) {
-                        segurado.setId(rs.getInt(1));
-                    }
+            try (ResultSet rs = stmt.getGeneratedKeys()) {
+                if (rs.next()) {
+                    segurado.setId(rs.getInt(1));
                 }
             }
+
         } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao criar segurado", e);
+            throw new RuntimeException("Erro ao criar segurado", e);
         }
     }
+
 
     /**
      * Busca segurado pelo ID.
@@ -180,25 +180,20 @@ public class SeguradoDAO {
      * Atualiza o nome do segurado.
      */
     public void atualizarNome(int id, String novoNome) {
-        try {
-            int idServidor = obterIdServidorPorSegurado(id);
-            PermissaoValidator.validarPodeAlterarNomeSegurado(idServidor);
+        int idServidor = obterIdServidorPorSegurado(id);
+        PermissaoValidator.validarPodeAlterarNomeSegurado(idServidor);
 
-            String sql = "UPDATE segurado SET nome_segurado = ? WHERE id = ?";
+        String sql = "UPDATE segurado SET nome_segurado = ? WHERE id = ?";
 
-            try (Connection conn = DatabaseConfig.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-                stmt.setString(1, novoNome);
-                stmt.setInt(2, id);
+            stmt.setString(1, novoNome);
+            stmt.setInt(2, id);
+            stmt.executeUpdate();
 
-                int rows = stmt.executeUpdate();
-                if (rows == 0) {
-                    throw new ObjectNotFoundException("Segurado não encontrado para atualizar nome.");
-                }
-            }
         } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao atualizar nome do segurado", e);
+            throw new RuntimeException("Erro ao atualizar nome", e);
         }
     }
 
@@ -259,21 +254,22 @@ public class SeguradoDAO {
      * Retorna o ID do servidor que cadastrou o segurado.
      * @throws SQLException caso ocorra erro na consulta.
      */
-    public int obterIdServidorPorSegurado(int idSegurado) throws SQLException {
+    private int obterIdServidorPorSegurado(int idSegurado) {
         String sql = "SELECT id_servidor FROM segurado WHERE id = ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, idSegurado);
+            ResultSet rs = stmt.executeQuery();
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt("id_servidor");
-                } else {
-                    throw new ObjectNotFoundException("Segurado não encontrado. ID: " + idSegurado);
-                }
+            if (rs.next()) {
+                return rs.getInt("id_servidor");
             }
+            throw new RuntimeException("Segurado não encontrado");
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Erro ao buscar servidor", e);
         }
     }
 
