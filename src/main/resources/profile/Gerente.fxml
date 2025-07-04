@@ -11,14 +11,15 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="downloadIMG" prefHeight="434.0" prefWidth="749.0" style="-fx-background-color: #005cb9;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="inss.gca.mogi.mogi.controller.profile.GerenteController">
+<AnchorPane stylesheets="@../assets/styles/styles.css"
+            fx:id="downloadIMG" prefHeight="434.0" prefWidth="764.0" style="-fx-background-color: #005cb9;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="inss.gca.mogi.mogi.controller.profile.GerenteController">
    <children>
       <ImageView fitHeight="36.0" fitWidth="149.0" layoutX="315.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true">
          <image>
             <Image url="@../assets/images/logoBranco.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="closeImageView" fitHeight="36.0" fitWidth="23.0" layoutX="704.0" layoutY="21.0" onMouseClicked="#handleClose" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand; ">
+      <ImageView fx:id="closeImageView" fitHeight="36.0" fitWidth="23.0" layoutX="715.0" layoutY="33.0" onMouseClicked="#handleClose" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand; ">
          <image>
             <Image url="@../assets/images/closeBranco.png" />
          </image>
@@ -29,13 +30,24 @@
          </font>
       </Label>
       <ChoiceBox fx:id="filtroChoiceBox" layoutX="22.0" layoutY="125.0" prefHeight="32.0" prefWidth="158.0" style="-fx-background-color: white; -fx-border-radius: 8px; -fx-text-fill: #dfe8f2; -fx-cursor: hand;" />
-      <TextField fx:id="buscaTextField" layoutX="189.0" layoutY="125.0" prefHeight="36.0" prefWidth="366.0" promptText="Buscar..." style="-fx-border-radius: 8px; -fx-cursor: hand; -fx-text-fill: #044793;" />
-      <Button fx:id="buscarButton" layoutX="562.0" layoutY="125.0" onAction="#onBuscar" prefHeight="36.0" prefWidth="95.0" style="-fx-background-color: white; -fx-border-radius: 8px; -fx-cursor: hand;" text="BUSCAR" textFill="#044793">
+      <TextField fx:id="buscaTextField" layoutX="189.0" layoutY="125.0" prefHeight="36.0" prefWidth="253.0" promptText="Buscar..." style="-fx-border-radius: 8px; -fx-cursor: hand; -fx-text-fill: #044793;" />
+      <Button fx:id="buscarButton" layoutX="453.0" layoutY="125.0" onAction="#onBuscar" prefHeight="36.0" prefWidth="95.0" style="-fx-background-color: white; -fx-border-radius: 8px; -fx-cursor: hand;" text="BUSCAR" textFill="#044793">
          <font>
             <Font name="System Bold" size="13.0" />
          </font>
       </Button>
-      <TableView fx:id="tableResultado" layoutX="22.0" layoutY="168.0" prefHeight="187.0" prefWidth="636.0">
+      <Button fx:id="buscarCaixasButton"
+              AnchorPane.topAnchor="125.0"
+              AnchorPane.rightAnchor="90.0"
+              onAction="#onBuscarTodas"
+              prefHeight="36.0" prefWidth="130.0"
+              style="-fx-background-color: white; -fx-border-radius: 8px; -fx-cursor: hand;"
+              text="BUSCAR CAIXAS" textFill="#044793">
+         <font>
+            <Font name="System Bold" size="13.0" />
+         </font>
+      </Button>
+      <TableView fx:id="tableResultado" layoutX="22.0" layoutY="168.0" prefHeight="187.0" prefWidth="665.0">
          <columns>
             <TableColumn fx:id="colTipoBeneficio" prefWidth="100.0" text="Tipo Benefício" />
             <TableColumn fx:id="colNb" prefWidth="80.0" text="NB" />
@@ -51,22 +63,22 @@
             <Image url="@../assets/images/user.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="cadCaixa" fitHeight="57.0" fitWidth="49.0" layoutX="680.0" layoutY="125.0" onMouseClicked="#handleCadCXIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="cadCaixa" fitHeight="57.0" fitWidth="49.0" layoutX="702.0" layoutY="101.0" onMouseClicked="#handleCadCXIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
          <image>
             <Image url="@../assets/images/caixaADD.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="altCaixa" fitHeight="57.0" fitWidth="49.0" layoutX="680.0" layoutY="185.0" onMouseClicked="#handleALTCXIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="altCaixa" fitHeight="57.0" fitWidth="49.0" layoutX="702.0" layoutY="161.0" onMouseClicked="#handleALTCXIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
          <image>
             <Image url="@../assets/images/caixaALT.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="cadArquivo" fitHeight="49.0" fitWidth="49.0" layoutX="680.0" layoutY="243.0" onMouseClicked="#handleCADARIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="cadArquivo" fitHeight="49.0" fitWidth="49.0" layoutX="702.0" layoutY="217.0" onMouseClicked="#handleCADARIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
          <image>
             <Image url="@../assets/images/arquivoADD.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="altArquivo" fitHeight="57.0" fitWidth="49.0" layoutX="691.0" layoutY="306.0" onMouseClicked="#handleALTARIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="altArquivo" fitHeight="57.0" fitWidth="49.0" layoutX="710.0" layoutY="274.0" onMouseClicked="#handleALTARIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
          <image>
             <Image url="@../assets/images/arquivoALT.png" />
          </image>
@@ -81,14 +93,19 @@
             <Image url="@../assets/images/userrelatorio.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="impressoraIMG" fitHeight="57.0" fitWidth="49.0" layoutX="608.0" layoutY="361.0" onMouseClicked="#handleALTARIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="impressoraIMG" fitHeight="57.0" fitWidth="49.0" layoutX="589.0" layoutY="369.0" onMouseClicked="#handleALTARIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
          <image>
             <Image url="@../assets/images/imprimir.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="downloadIMG1" fitHeight="39.0" fitWidth="49.0" layoutX="543.0" layoutY="366.0" onMouseClicked="#handleALTARIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="downloadIMG1" fitHeight="39.0" fitWidth="49.0" layoutX="648.0" layoutY="369.0" onMouseClicked="#handleALTARIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
          <image>
             <Image url="@../assets/images/baixar.png" />
+         </image>
+      </ImageView>
+      <ImageView fx:id="excluirIcon" fitHeight="57.0" fitWidth="39.0" layoutX="538.0" layoutY="374.0" onMouseClicked="#handleEXCIconClick" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+         <image>
+            <Image url="@../assets/images/excluir.png" />
          </image>
       </ImageView>
    </children>

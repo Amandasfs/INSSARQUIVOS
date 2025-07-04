@@ -1,5 +1,6 @@
 package inss.gca.mogi.mogi.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CaixaDTO {
@@ -10,7 +11,7 @@ public class CaixaDTO {
     private String nbInicial;
     private String nbFinal;
     private int idServidor;
-    private List<String> nbs; // lista de NB cadastrados na caixa
+    private List<String> nbs = new ArrayList<>(); // ✅ Inicializado
 
     public CaixaDTO(String codCaixa, int prateleira, String rua, String andar, String nbInicial, String nbFinal, int idServidor) {
         this.codCaixa = codCaixa;
@@ -23,7 +24,6 @@ public class CaixaDTO {
     }
 
     public CaixaDTO() {
-
     }
 
     public String getCodCaixa() {
@@ -87,5 +87,6 @@ public class CaixaDTO {
     }
 
     public void setNbs(List<String> nbs) {
+        this.nbs = (nbs != null) ? nbs : new ArrayList<>(); // Protege contra null
     }
 }

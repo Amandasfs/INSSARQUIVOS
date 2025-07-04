@@ -4,6 +4,7 @@ import inss.gca.mogi.mogi.model.Servidor;
 import inss.gca.mogi.mogi.service.LoginService;
 import inss.gca.mogi.mogi.service.exceptions.DataIntegrityViolationException;
 import inss.gca.mogi.mogi.service.exceptions.ObjectNotFoundException;
+import inss.gca.mogi.mogi.service.exceptions.ServidorDesativadoException;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -30,6 +31,7 @@ public class LoginController {
 
     @FXML
     private void onEntrarClicked(ActionEvent event) {
+
         String matriculaStr = matriculaField.getText().trim();
         String senha = passwordField.getText();
 
@@ -57,12 +59,15 @@ public class LoginController {
 
         } catch (NumberFormatException e) {
             showAlert(Alert.AlertType.ERROR, "Erro de formato", "A matrícula deve conter apenas números.");
+        } catch (ServidorDesativadoException e) {
+            showAlert(Alert.AlertType.WARNING, "Servidor desativado", e.getMessage());
         } catch (ObjectNotFoundException e) {
             showAlert(Alert.AlertType.ERROR, "Falha no login", e.getMessage());
         } catch (DataIntegrityViolationException e) {
             showAlert(Alert.AlertType.ERROR, "Erro interno", "Erro ao acessar o sistema. Contate o suporte.");
         }
     }
+
 
     @FXML
     private void onConsultarClicked(ActionEvent event) {
@@ -80,13 +85,18 @@ public class LoginController {
             Stage stage = (Stage) matriculaField.getScene().getWindow();
             FXMLLoader loader = new FXMLLoader(getClass().getResource(fxmlPath));
             Scene newScene = new Scene(loader.load());
+
             stage.setScene(newScene);
+            stage.setFullScreen(true);         // entra em modo fullscreen
+            stage.setFullScreenExitHint("");   // remove a dica de tecla
             stage.show();
+
         } catch (IOException e) {
             e.printStackTrace();
             showAlert(Alert.AlertType.ERROR, "Erro ao carregar a tela", "Não foi possível abrir a nova tela.");
         }
     }
+
 
     private void showAlert(Alert.AlertType tipo, String titulo, String mensagem) {
         Alert alert = new Alert(tipo);

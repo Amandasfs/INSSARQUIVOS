@@ -12,6 +12,7 @@ module inss.gca.mogi.mogi {
     // O "opens" é necessário para permitir que o JavaFX leia e manipule as classes de controladores por reflexão.
     opens inss.gca.mogi.mogi.controller to javafx.fxml;
     opens inss.gca.mogi.mogi.dto to javafx.base;
+    opens inss.gca.mogi.mogi.model to javafx.base;
     opens inss.gca.mogi.mogi.controller.profile to javafx.fxml;
     opens inss.gca.mogi.mogi.controller.select to javafx.fxml;
     opens inss.gca.mogi.mogi.controller.create to javafx.fxml;

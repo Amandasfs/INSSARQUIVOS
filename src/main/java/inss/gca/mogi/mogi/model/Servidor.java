@@ -151,4 +151,9 @@ public class Servidor {
     public void setPodeExcluir(boolean podeExcluir) {
         this.podeExcluir = podeExcluir;
     }
+
+    public boolean isGerente() {
+        return this.tipoPerfil == TipoPerfil.GERENTE;
+    }
+
 }

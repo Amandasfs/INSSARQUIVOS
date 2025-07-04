@@ -16,16 +16,12 @@ public class PainelServidorController {
     private ImageView gerarRelatorio;
 
     @FXML
-    private ImageView gerarRelatorio1; // editar
-
-    @FXML
-    private ImageView gerarRelatorio11; // excluir
+    private ImageView editar; // editar
 
     @FXML
     public void initialize() {
         gerarRelatorio.setOnMouseClicked(event -> abrirTela("/util/RelatorioServidor.fxml", "Relatório de Servidores"));
-        gerarRelatorio1.setOnMouseClicked(event -> abrirTela("/update/AlterarServidor.fxml", "Editar Servidor"));
-        gerarRelatorio11.setOnMouseClicked(event -> abrirTela("/delete/ExcluirServidor.fxml", "Excluir Servidor"));
+        editar.setOnMouseClicked(event -> abrirTela("/select/SelectAltServidor.fxml", "Editar Servidor"));
     }
 
     private void abrirTela(String path, String titulo) {

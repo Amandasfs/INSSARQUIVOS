@@ -11,14 +11,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Classe DAO responsável pelo acesso e manipulação dos dados da entidade Caixa no banco de dados.
+ * Implementa as operações CRUD e consultas específicas para Caixa.
+ */
 public class CaixaDAO {
 
+    /**
+     * Insere uma nova Caixa no banco de dados.
+     * @param caixa objeto Caixa a ser cadastrado
+     * @throws DataIntegrityViolationException em caso de erro SQL durante a inserção
+     */
     public void cadastrar(Caixa caixa) {
         String sql = "INSERT INTO caixa (cod_caixa, prateleira, rua, andar, nb_inicial, nb_final, id_servidor) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
+        // Usa try-with-resources para garantir fechamento automático de recursos
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
+            // Configura parâmetros da consulta para evitar SQL Injection
             stmt.setString(1, caixa.getCodCaixa());
             stmt.setInt(2, caixa.getPrateleira());
             stmt.setString(3, caixa.getRua());
@@ -30,10 +41,16 @@ public class CaixaDAO {
             stmt.executeUpdate();
 
         } catch (SQLException e) {
+            // Lança exceção personalizada para tratamento na camada superior
             throw new DataIntegrityViolationException("Erro ao cadastrar caixa", e);
         }
     }
 
+    /**
+     * Recupera todas as caixas cadastradas no banco.
+     * @return lista de objetos Caixa
+     * @throws DataIntegrityViolationException em caso de erro SQL
+     */
     public List<Caixa> buscarTodas() {
         String sql = "SELECT * FROM caixa";
         List<Caixa> caixas = new ArrayList<>();
@@ -42,6 +59,7 @@ public class CaixaDAO {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
+            // Itera sobre o ResultSet e converte cada registro em objeto Caixa
             while (rs.next()) {
                 caixas.add(mapResultSetToCaixa(rs));
             }
@@ -53,6 +71,15 @@ public class CaixaDAO {
         return caixas;
     }
 
+    /**
+     * Atualiza os dados de localização da caixa.
+     * @param codCaixa código da caixa a ser atualizada
+     * @param rua rua nova
+     * @param prateleira número da prateleira nova
+     * @param andar andar novo
+     * @throws ObjectNotFoundException se a caixa não existir
+     * @throws DataIntegrityViolationException para erros SQL
+     */
     public void atualizarLocal(String codCaixa, String rua, int prateleira, String andar) {
         String sql = "UPDATE caixa SET rua = ?, prateleira = ?, andar = ? WHERE cod_caixa = ?";
 
@@ -72,6 +99,14 @@ public class CaixaDAO {
         }
     }
 
+    /**
+     * Atualiza os números de benefício (NB) inicial e final da caixa.
+     * @param codCaixa código da caixa
+     * @param nbInicial novo NB inicial (sem formatação)
+     * @param nbFinal novo NB final (sem formatação)
+     * @throws ObjectNotFoundException se a caixa não for encontrada
+     * @throws DataIntegrityViolationException em caso de erro SQL
+     */
     public void atualizarNb(String codCaixa, String nbInicial, String nbFinal) {
         String sql = "UPDATE caixa SET nb_inicial = ?, nb_final = ? WHERE cod_caixa = ?";
 
@@ -90,6 +125,13 @@ public class CaixaDAO {
         }
     }
 
+    /**
+     * Atualiza o código da caixa.
+     * @param codCaixaAntigo código atual da caixa
+     * @param codCaixaNovo novo código para a caixa
+     * @throws ObjectNotFoundException se a caixa não existir
+     * @throws DataIntegrityViolationException em caso de erro SQL
+     */
     public void atualizarCodigo(String codCaixaAntigo, String codCaixaNovo) {
         String sql = "UPDATE caixa SET cod_caixa = ? WHERE cod_caixa = ?";
 
@@ -107,6 +149,12 @@ public class CaixaDAO {
         }
     }
 
+    /**
+     * Remove uma caixa do banco.
+     * @param codCaixa código da caixa a ser excluída
+     * @throws ObjectNotFoundException se a caixa não existir
+     * @throws DataIntegrityViolationException em caso de erro SQL
+     */
     public void deletar(String codCaixa) {
         String sql = "DELETE FROM caixa WHERE cod_caixa = ?";
 
@@ -123,6 +171,35 @@ public class CaixaDAO {
         }
     }
 
+    /**
+     * Verifica se existem arquivos vinculados a uma determinada caixa.
+     * Usado para garantir deleção segura, evitando remover caixas em uso.
+     * @param codCaixa código da caixa
+     * @return true se existir ao menos um arquivo vinculado, false caso contrário
+     */
+    public boolean existeArquivoNaCaixa(String codCaixa) {
+        String sql = "SELECT 1 FROM arquivo WHERE cod_caixa = ? LIMIT 1";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, codCaixa);
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next(); // Retorna true se encontrou algum registro
+            }
+
+        } catch (SQLException e) {
+            throw new DataIntegrityViolationException("Erro ao verificar arquivos vinculados à caixa", e);
+        }
+    }
+
+    /**
+     * Busca a caixa que contém determinado número de benefício (NB).
+     * Considera o intervalo NB inicial - NB final da caixa.
+     * @param nb número de benefício a buscar (sem formatação)
+     * @return objeto Caixa encontrado ou null se não existir
+     * @throws DataIntegrityViolationException em caso de erro SQL
+     */
     public Caixa buscarCaixaPorNB(String nb) {
         String sql = "SELECT cod_caixa, nb_inicial, nb_final FROM caixa";
 
@@ -130,10 +207,12 @@ public class CaixaDAO {
              PreparedStatement stmt = conn.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
 
+            // Percorre todas as caixas para verificar se o NB está no intervalo
             while (rs.next()) {
                 String nbInicial = rs.getString("nb_inicial");
                 String nbFinal = rs.getString("nb_final");
 
+                // Compara lexicograficamente o NB dentro do intervalo
                 if (nb.compareTo(nbInicial) >= 0 && nb.compareTo(nbFinal) <= 0) {
                     Caixa caixa = new Caixa();
                     caixa.setCodCaixa(rs.getString("cod_caixa"));
@@ -145,9 +224,16 @@ public class CaixaDAO {
             throw new DataIntegrityViolationException("Erro ao realizar busca por NB", e);
         }
 
+        // Retorna null se nenhuma caixa foi encontrada com o NB informado
         return null;
     }
 
+    /**
+     * Busca uma caixa pelo código.
+     * @param codCaixa código da caixa
+     * @return Optional contendo a Caixa encontrada ou vazio se não existir
+     * @throws ObjectNotFoundException em caso de erro SQL
+     */
     public Optional<Caixa> buscarCaixaPorCodigo(String codCaixa) {
         String sql = "SELECT * FROM caixa WHERE cod_caixa = ?";
 
@@ -168,6 +254,12 @@ public class CaixaDAO {
         }
     }
 
+    /**
+     * Mapeia uma linha do ResultSet para um objeto Caixa.
+     * @param rs ResultSet da consulta SQL
+     * @return objeto Caixa preenchido
+     * @throws SQLException caso ocorra erro no acesso ao ResultSet
+     */
     private Caixa mapResultSetToCaixa(ResultSet rs) throws SQLException {
         return new Caixa(
                 rs.getString("cod_caixa"),
@@ -180,6 +272,12 @@ public class CaixaDAO {
         );
     }
 
+    /**
+     * Busca o NB inicial da caixa pelo código.
+     * @param codCaixa código da caixa
+     * @return NB inicial ou null se não encontrado
+     * @throws SQLException em caso de erro SQL
+     */
     public String buscarNbInicial(String codCaixa) throws SQLException {
         String sql = "SELECT nb_inicial FROM caixa WHERE cod_caixa = ?";
         try (Connection conn = DatabaseConfig.getConnection();
@@ -192,6 +290,12 @@ public class CaixaDAO {
         return null;
     }
 
+    /**
+     * Busca o NB final da caixa pelo código.
+     * @param codCaixa código da caixa
+     * @return NB final ou null se não encontrado
+     * @throws SQLException em caso de erro SQL
+     */
     public String buscarNbFinal(String codCaixa) throws SQLException {
         String sql = "SELECT nb_final FROM caixa WHERE cod_caixa = ?";
         try (Connection conn = DatabaseConfig.getConnection();
@@ -204,6 +308,13 @@ public class CaixaDAO {
         return null;
     }
 
+    /**
+     * Busca uma caixa e seus números de benefício (NBs) associados,
+     * retornando um DTO com dados completos e a lista de NBs.
+     * @param codCaixa código da caixa
+     * @return CaixaDTO com dados e lista de NBs
+     * @throws RuntimeException se ocorrer erro ou caixa não encontrada
+     */
     public CaixaDTO buscarPorCodigoComNbs(String codCaixa) {
         CaixaDTO caixaDto = null;
 
@@ -224,7 +335,7 @@ public class CaixaDAO {
                     caixaDto.setNbFinal(rs.getString("nb_final"));
                     caixaDto.setIdServidor(rs.getInt("id_servidor"));
 
-                    // Agora buscar NBs cadastrados para essa caixa
+                    // Busca os NBs cadastrados para essa caixa
                     String sqlNbs = "SELECT nb FROM arquivo WHERE cod_caixa = ?";
                     try (PreparedStatement stmtNbs = conn.prepareStatement(sqlNbs)) {
                         stmtNbs.setString(1, codCaixa);
@@ -248,6 +359,4 @@ public class CaixaDAO {
 
         return caixaDto;
     }
-
-
 }

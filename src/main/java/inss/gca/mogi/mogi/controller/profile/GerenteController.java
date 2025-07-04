@@ -2,6 +2,7 @@ package inss.gca.mogi.mogi.controller.profile;
 
 import inss.gca.mogi.mogi.dto.BuscaDTO;
 import inss.gca.mogi.mogi.dto.CaixaDTO;
+import inss.gca.mogi.mogi.model.Caixa;
 import inss.gca.mogi.mogi.service.ArquivoService;
 import inss.gca.mogi.mogi.service.CaixaService;
 import inss.gca.mogi.mogi.service.SeguradoService;
@@ -27,7 +28,8 @@ public class GerenteController {
     @FXML private TextField buscaTextField;
     @FXML private ChoiceBox<String> filtroChoiceBox;
     @FXML private TableView<BuscaDTO> tableResultado;
-
+    @FXML
+    private Button buscarButton, buscarCaixasButton;
     @FXML private TableColumn<BuscaDTO, String> colTipoBeneficio;
     @FXML private TableColumn<BuscaDTO, String> colNb;
     @FXML private TableColumn<BuscaDTO, String> colNomeSegurado;
@@ -42,7 +44,7 @@ public class GerenteController {
 
     @FXML
     public void initialize() {
-        filtroChoiceBox.setItems(FXCollections.observableArrayList("CPF", "NB", "Caixa", "Servidor"));
+        filtroChoiceBox.setItems(FXCollections.observableArrayList("CPF", "NB", "Caixa"));
         filtroChoiceBox.getSelectionModel().selectFirst();
 
         colCodCaixa.setCellValueFactory(new PropertyValueFactory<>("codCaixa"));
@@ -144,6 +146,38 @@ public class GerenteController {
         atualizarTabela(resultados);
     }
 
+    @FXML
+    private void onBuscarTodas() {
+        try {
+            List<Caixa> caixas = caixaService.buscarTodasCaixas();
+            if (caixas.isEmpty()) {
+                showAlert("Nenhum resultado", "Erro ao buscar caixas");
+                clearTabela();
+                return;
+            }
+
+            List<BuscaDTO> resultados = new ArrayList<>();
+
+            for (Caixa caixa : caixas) {
+                BuscaDTO dto = new BuscaDTO();
+                dto.setCodCaixa(caixa.getCodCaixa());
+                dto.setRua(caixa.getRua());
+                dto.setPrateleira(caixa.getPrateleira());
+                dto.setAndar(caixa.getAndar());
+                dto.setNb(caixa.getNbInicial() + " até " + caixa.getNbFinal());
+                dto.setTipoBeneficio("Caixa cadastrada");
+                // Campos como nomeSegurado, cpfSegurado e outros podem ficar vazios ou ajustar conforme necessidade
+                resultados.add(dto);
+            }
+
+            atualizarTabela(resultados);
+
+        } catch (Exception e) {
+            showAlert("Nenhum resultado", "Erro ao buscar caixas");
+            clearTabela();
+        }
+    }
+
     private void atualizarTabela(List<BuscaDTO> dados) {
         ObservableList<BuscaDTO> lista = FXCollections.observableArrayList(dados);
         tableResultado.setItems(lista);
@@ -209,6 +243,9 @@ public class GerenteController {
         abrirTela("/profile/PainelServidor.fxml", "PAINEL USUARIO");
     }
 
+    public void handleEXCIconClick(MouseEvent mouseEvent){
+        abrirTela("/select/SelectExcluirSelect.fxml", "PAINEL EXCLUIR");
+    }
     private void abrirTela(String path, String titulo) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource(path));

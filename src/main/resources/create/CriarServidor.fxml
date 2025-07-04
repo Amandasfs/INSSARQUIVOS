@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane prefHeight="540.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="inss.gca.mogi.mogi.controller.create.CriarSeguradoController">
+<AnchorPane prefHeight="540.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="inss.gca.mogi.mogi.controller.create.CriarServidorController">
    <children>
       <Label layoutX="56.0" layoutY="24.0" text="CADASTRAR SERVIDOR" textFill="#044793">
          <font>

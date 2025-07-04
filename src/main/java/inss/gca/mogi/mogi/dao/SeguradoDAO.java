@@ -11,8 +11,16 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * DAO responsável por realizar operações CRUD na entidade Segurado.
+ * Controla acesso ao banco de dados, incluindo validação de permissões.
+ */
 public class SeguradoDAO {
 
+    /**
+     * Insere um novo segurado no banco.
+     * @param segurado objeto com os dados a serem inseridos.
+     */
     public void criar(Segurado segurado) {
         try {
             PermissaoValidator.validarPodeCadastrar(segurado.getIdServidor());
@@ -28,9 +36,10 @@ public class SeguradoDAO {
 
                 stmt.executeUpdate();
 
-                ResultSet rs = stmt.getGeneratedKeys();
-                if (rs.next()) {
-                    segurado.setId(rs.getInt(1));
+                try (ResultSet rs = stmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        segurado.setId(rs.getInt(1));
+                    }
                 }
             }
         } catch (SQLException e) {
@@ -38,6 +47,12 @@ public class SeguradoDAO {
         }
     }
 
+    /**
+     * Busca segurado pelo ID.
+     * @param id identificador do segurado.
+     * @return objeto Segurado encontrado.
+     * @throws ObjectNotFoundException se segurado não existir.
+     */
     public Segurado buscarPorId(int id) {
         String sql = "SELECT * FROM segurado WHERE id = ?";
 
@@ -45,23 +60,29 @@ public class SeguradoDAO {
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
 
-            if (rs.next()) {
-                Segurado segurado = new Segurado();
-                segurado.setId(rs.getInt("id"));
-                segurado.setNomeSegurado(rs.getString("nome_segurado"));
-                segurado.setCpf(rs.getString("cpf"));
-                segurado.setIdServidor(rs.getInt("id_servidor"));
-                return segurado;
-            } else {
-                throw new ObjectNotFoundException("Segurado não encontrado com ID: " + id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    Segurado segurado = new Segurado();
+                    segurado.setId(rs.getInt("id"));
+                    segurado.setNomeSegurado(rs.getString("nome_segurado"));
+                    segurado.setCpf(rs.getString("cpf"));
+                    segurado.setIdServidor(rs.getInt("id_servidor"));
+                    return segurado;
+                } else {
+                    throw new ObjectNotFoundException("Segurado não encontrado com ID: " + id);
+                }
             }
         } catch (SQLException e) {
             throw new DataIntegrityViolationException("Erro ao buscar segurado", e);
         }
     }
 
+    /**
+     * Busca arquivos associados a um CPF, retornando lista de DTOs.
+     * @param cpf CPF do segurado (limpo de formatação).
+     * @return lista de BuscaDTO com arquivos relacionados.
+     */
     public List<BuscaDTO> buscarPorCpf(String cpf) {
         String sql = """
         SELECT a.id, a.cod_caixa, a.nb, a.tipo_beneficio,
@@ -72,7 +93,6 @@ public class SeguradoDAO {
         JOIN caixa c ON a.cod_caixa = c.cod_caixa
         WHERE regexp_replace(s.cpf, '[^0-9]', '', 'g') = ?
         """;
-
 
         List<BuscaDTO> resultados = new ArrayList<>();
 
@@ -104,6 +124,9 @@ public class SeguradoDAO {
         return resultados;
     }
 
+    /**
+     * Retorna lista com todos os segurados cadastrados.
+     */
     public List<Segurado> buscarTodos() {
         String sql = "SELECT * FROM segurado";
         List<Segurado> segurados = new ArrayList<>();
@@ -127,6 +150,9 @@ public class SeguradoDAO {
         return segurados;
     }
 
+    /**
+     * Atualiza o CPF de um segurado.
+     */
     public void atualizarCPF(int id, String novoCpf) {
         try {
             int idServidor = obterIdServidorPorSegurado(id);
@@ -150,6 +176,9 @@ public class SeguradoDAO {
         }
     }
 
+    /**
+     * Atualiza o nome do segurado.
+     */
     public void atualizarNome(int id, String novoNome) {
         try {
             int idServidor = obterIdServidorPorSegurado(id);
@@ -173,6 +202,9 @@ public class SeguradoDAO {
         }
     }
 
+    /**
+     * Exclui um segurado pelo ID.
+     */
     public void deletar(int id) {
         try {
             int idServidor = obterIdServidorPorSegurado(id);
@@ -195,6 +227,9 @@ public class SeguradoDAO {
         }
     }
 
+    /**
+     * Busca um segurado pelo CPF (único).
+     */
     public Segurado buscarPorCpfUnico(String cpf) {
         String sql = "SELECT * FROM segurado WHERE cpf = ?";
 
@@ -222,6 +257,7 @@ public class SeguradoDAO {
 
     /**
      * Retorna o ID do servidor que cadastrou o segurado.
+     * @throws SQLException caso ocorra erro na consulta.
      */
     public int obterIdServidorPorSegurado(int idSegurado) throws SQLException {
         String sql = "SELECT id_servidor FROM segurado WHERE id = ?";
@@ -238,6 +274,36 @@ public class SeguradoDAO {
                     throw new ObjectNotFoundException("Segurado não encontrado. ID: " + idSegurado);
                 }
             }
+        }
+    }
+
+    /**
+     * Exclui o segurado se não possuir arquivos vinculados.
+     */
+    public void deletarSeNaoTiverArquivos(int id) {
+        try {
+            if (new ArquivoDAO().existeArquivoDoSegurado(id)) {
+                throw new RuntimeException("Não é possível excluir o segurado: ainda existem arquivos vinculados.");
+            }
+
+            int idServidor = obterIdServidorPorSegurado(id);
+            PermissaoValidator.validarPodeExcluir(idServidor);
+
+            String sql = "DELETE FROM segurado WHERE id = ?";
+
+            try (Connection conn = DatabaseConfig.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+                stmt.setInt(1, id);
+
+                int rows = stmt.executeUpdate();
+                if (rows == 0) {
+                    throw new ObjectNotFoundException("Segurado não encontrado para exclusão.");
+                }
+
+            }
+        } catch (SQLException e) {
+            throw new DataIntegrityViolationException("Erro ao excluir segurado.", e);
         }
     }
 }

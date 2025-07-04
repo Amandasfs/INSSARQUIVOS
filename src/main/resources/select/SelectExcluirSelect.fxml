@@ -6,7 +6,6 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-
 <AnchorPane prefHeight="217.0" prefWidth="599.0" style="-fx-background-color: #044793;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="inss.gca.mogi.mogi.controller.select.SelectExcluirController">
    <children>
       <ImageView fitHeight="31.0" fitWidth="24.0" layoutX="553.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
@@ -21,12 +20,12 @@
       </Label>
       <Label layoutX="168.0" layoutY="157.0" text="Excluir caixa" textFill="WHITE" />
       <Label layoutX="324.0" layoutY="157.0" text="Excluir arquivo" textFill="WHITE" />
-      <ImageView fitHeight="65.0" fitWidth="75.0" layoutX="178.0" layoutY="76.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="arquivo" fitHeight="65.0" fitWidth="75.0" layoutX="337.0" layoutY="76.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
          <image>
             <Image url="@../assets/images/excluirArquivos.png" />
          </image>
       </ImageView>
-      <ImageView fitHeight="75.0" fitWidth="75.0" layoutX="332.0" layoutY="71.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+      <ImageView fx:id="caixa" fitHeight="75.0" fitWidth="75.0" layoutX="168.0" layoutY="71.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
          <image>
             <Image url="@../assets/images/excluirCaixa.png" />
          </image>

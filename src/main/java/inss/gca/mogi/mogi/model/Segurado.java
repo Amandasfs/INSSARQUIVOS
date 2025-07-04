@@ -48,4 +48,5 @@ public class Segurado {
     public void setIdServidor(int idServidor) {
         this.idServidor = idServidor;
     }
+    
 }

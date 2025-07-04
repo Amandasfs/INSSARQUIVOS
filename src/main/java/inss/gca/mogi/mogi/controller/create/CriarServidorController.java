@@ -7,7 +7,7 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
-public class CriarSeguradoController {
+public class CriarServidorController {
 
     @FXML
     private TextField nomeField;

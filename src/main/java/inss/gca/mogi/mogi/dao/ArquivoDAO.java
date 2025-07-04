@@ -7,13 +7,19 @@ import inss.gca.mogi.mogi.security.PermissaoValidator;
 import inss.gca.mogi.mogi.service.exceptions.DataIntegrityViolationException;
 import inss.gca.mogi.mogi.service.exceptions.ObjectNotFoundException;
 
-
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Classe responsável por realizar operações de acesso ao banco de dados
+ * para a entidade Arquivo.
+ */
 public class ArquivoDAO {
 
+    /**
+     * Cria um novo arquivo no banco de dados após validar permissões.
+     */
     public void criar(Arquivo arquivo) {
         try {
             PermissaoValidator.validarPodeCadastrar(arquivo.getIdServidor());
@@ -36,6 +42,9 @@ public class ArquivoDAO {
         }
     }
 
+    /**
+     * Atualiza os dados de um arquivo no banco de dados.
+     */
     public void atualizar(Arquivo arquivo) {
         try {
             PermissaoValidator.validarPodeAlterar(arquivo.getIdServidor());
@@ -59,63 +68,20 @@ public class ArquivoDAO {
         }
     }
 
-    public void deletar(int id) {
-        int idServidor = obterIdServidorPorArquivo(id);
-
-        try {
-            PermissaoValidator.validarPodeExcluir(idServidor);
-
-            String sql = "DELETE FROM arquivo WHERE id = ?";
-
-            try (Connection conn = DatabaseConfig.getConnection();
-                 PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-                stmt.setInt(1, id);
-                stmt.executeUpdate();
-            }
-        } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao deletar arquivo.", e);
-        }
-    }
-
-    public Arquivo buscarPorId(int id) {
-        String sql = "SELECT * FROM arquivo WHERE id = ?";
-
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-
-            stmt.setInt(1, id);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    return new Arquivo(
-                            rs.getInt("id"),
-                            rs.getString("nb"),
-                            rs.getString("tipo_beneficio"),
-                            rs.getInt("id_segurado"),
-                            rs.getString("cod_caixa"),
-                            rs.getInt("id_servidor")
-                    );
-                } else {
-                    throw new ObjectNotFoundException("Arquivo não encontrado com ID: " + id);
-                }
-            }
-        } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao buscar arquivo por ID.", e);
-        }
-    }
-
+    /**
+     * Exclui um arquivo do banco de dados após validar permissões.
+     */
     public BuscaDTO buscarPorNb(String nb) {
         String nbLimpo = nb.replaceAll("\\D", "");
 
-        // 1. Busca arquivo cadastrado
         String sqlArquivo = """
-        SELECT a.id, a.cod_caixa, a.nb, a.tipo_beneficio,
-               s.cpf AS cpf_segurado, s.nome_segurado,
-               c.rua, c.prateleira, c.andar
-        FROM arquivo a
-        JOIN segurado s ON a.id_segurado = s.id
-        JOIN caixa c ON a.cod_caixa = c.cod_caixa
-        WHERE a.nb = ?
+            SELECT a.id, a.cod_caixa, a.nb, a.tipo_beneficio,
+                   s.cpf AS cpf_segurado, s.nome_segurado,
+                   c.rua, c.prateleira, c.andar
+            FROM arquivo a
+            JOIN segurado s ON a.id_segurado = s.id
+            JOIN caixa c ON a.cod_caixa = c.cod_caixa
+            WHERE a.nb = ?
         """;
 
         try (Connection conn = DatabaseConfig.getConnection();
@@ -139,7 +105,7 @@ public class ArquivoDAO {
                 }
             }
 
-            // 2. Se não achou arquivo, busca caixa que contenha o NB no intervalo
+            // Caso não encontre arquivo, procura na tabela caixa
             String sqlCaixa = "SELECT cod_caixa, prateleira, rua, andar, nb_inicial, nb_final FROM caixa";
 
             try (PreparedStatement stmtCaixa = conn.prepareStatement(sqlCaixa);
@@ -151,27 +117,63 @@ public class ArquivoDAO {
 
                     if (nbLimpo.compareTo(nbInicial) >= 0 && nbLimpo.compareTo(nbFinal) <= 0) {
                         BuscaDTO caixaDto = new BuscaDTO();
-                        caixaDto.setId(0); // id 0 indica arquivo não cadastrado
+                        caixaDto.setId(0); // Indica que não há arquivo, só caixa
                         caixaDto.setCodCaixa(rsCaixa.getString("cod_caixa"));
-                        caixaDto.setNb(nb); // NB pesquisado
+                        caixaDto.setNb(nb);
                         caixaDto.setRua(rsCaixa.getString("rua"));
                         caixaDto.setPrateleira(rsCaixa.getInt("prateleira"));
                         caixaDto.setAndar(rsCaixa.getString("andar"));
-                        // Pode colocar uma flag ou mensagem adicional para avisar que arquivo não cadastrado mas pertence a caixa
                         return caixaDto;
                     }
                 }
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Erro ao buscar arquivo por NB: " + e.getMessage(), e);
+            throw new DataIntegrityViolationException("Erro ao buscar arquivo por NB: " + e.getMessage(), e);
         }
 
-        // Nenhuma caixa nem arquivo encontrados para esse NB
-        throw new RuntimeException("Arquivo não cadastrado nem pertence a nenhuma caixa para NB: " + nb);
+        throw new ObjectNotFoundException("Arquivo não cadastrado nem pertence a nenhuma caixa para NB: " + nb);
+    }
+
+    public int obterIdServidorPorArquivo(int idArquivo) {
+        String sql = "SELECT id_servidor FROM arquivo WHERE id = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idArquivo);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt("id_servidor");
+                } else {
+                    throw new ObjectNotFoundException("Arquivo não encontrado. ID: " + idArquivo);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataIntegrityViolationException("Erro ao buscar ID do servidor pelo arquivo.", e);
+        }
+    }
+
+    public void deletar(int idArquivo, int idServidorLogado) {
+        // Validar permissão do servidor que está tentando excluir (logado), não do dono do arquivo
+        PermissaoValidator.validarPodeExcluir(idServidorLogado);
+
+        String sql = "DELETE FROM arquivo WHERE id = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idArquivo);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new DataIntegrityViolationException("Erro ao deletar arquivo.", e);
+        }
     }
 
 
+    /**
+     * Atualiza apenas o NB de um arquivo, com validação de permissão.
+     */
     public void atualizarNb(int id, String novoNb) {
         int idServidor = obterIdServidorPorArquivo(id);
 
@@ -193,6 +195,9 @@ public class ArquivoDAO {
         }
     }
 
+    /**
+     * Atualiza o código da caixa de um arquivo.
+     */
     public void atualizarCaixa(int id, String novoCodCaixa) {
         int idServidor = obterIdServidorPorArquivo(id);
 
@@ -214,6 +219,9 @@ public class ArquivoDAO {
         }
     }
 
+    /**
+     * Retorna todos os arquivos cadastrados.
+     */
     public List<Arquivo> listarTodos() {
         List<Arquivo> lista = new ArrayList<>();
         String sql = "SELECT * FROM arquivo";
@@ -241,24 +249,26 @@ public class ArquivoDAO {
     }
 
     /**
-     * Obtém o ID do servidor responsável por um determinado arquivo.
+     * Verifica se existe pelo menos um arquivo vinculado ao segurado informado.
      */
-    public int obterIdServidorPorArquivo(int idArquivo) {
-        String sql = "SELECT id_servidor FROM arquivo WHERE id = ?";
+    public boolean existeArquivoDoSegurado(int idSegurado) {
+        String sql = "SELECT COUNT(*) FROM arquivo WHERE id_segurado = ?";
 
         try (Connection conn = DatabaseConfig.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setInt(1, idArquivo);
+            stmt.setInt(1, idSegurado);
+
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt("id_servidor");
-                } else {
-                    throw new ObjectNotFoundException("Arquivo não encontrado. ID: " + idArquivo);
+                    return rs.getInt(1) > 0;
                 }
             }
+
         } catch (SQLException e) {
-            throw new DataIntegrityViolationException("Erro ao buscar ID do servidor pelo arquivo.", e);
+            throw new DataIntegrityViolationException("Erro ao verificar arquivos do segurado.", e);
         }
+
+        return false;
     }
 }

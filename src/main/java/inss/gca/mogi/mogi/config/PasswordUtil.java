@@ -35,6 +35,13 @@ public class PasswordUtil {
     }
 
     /**
+     * Alias para verifyPassword - usado para dar semântica diferente em outros contextos.
+     */
+    public static boolean checkPassword(String senhaDigitada, String senhaHashArmazenada) {
+        return verifyPassword(senhaDigitada, senhaHashArmazenada);
+    }
+
+    /**
      * Método de teste para demonstração da criptografia e validação de senha.
      * Pode ser usado em ambiente de desenvolvimento.
      */
@@ -43,16 +50,17 @@ public class PasswordUtil {
 
         // Criptografa a senha
         String hash = hashPassword(senhaOriginal);
-        System.out.println(" Hash gerado: " + hash);
+        System.out.println("Hash gerado: " + hash);
 
         // Testa se a senha confere com o hash
         boolean senhaValida = verifyPassword(senhaOriginal, hash);
-        System.out.println(senhaValida ? " Senha correta!" : "Senha incorreta!");
+        System.out.println(senhaValida ? "Senha correta!" : "Senha incorreta!");
 
+        // Teste manual com hash conhecido
         String senhaTentada = "amanda12";
         String hashDoBanco = "$2a$10$opCnf0RRhXDbWy.joJNsOu3ggcJtFboCsaTkwJ6SH4kCsJ9R6gMW2";
 
-        boolean valido = PasswordUtil.verifyPassword(senhaTentada, hashDoBanco);
+        boolean valido = checkPassword(senhaTentada, hashDoBanco);
         System.out.println(valido ? "Senha confere!" : "Senha incorreta!");
     }
 }

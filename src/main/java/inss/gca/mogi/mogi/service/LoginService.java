@@ -4,6 +4,7 @@ import inss.gca.mogi.mogi.dao.LoginDAO;
 import inss.gca.mogi.mogi.model.Servidor;
 import inss.gca.mogi.mogi.service.exceptions.DataIntegrityViolationException;
 import inss.gca.mogi.mogi.service.exceptions.ObjectNotFoundException;
+import inss.gca.mogi.mogi.service.exceptions.ServidorDesativadoException;
 
 /**
  * Serviço responsável por conter a lógica de negócio relacionada à autenticação de utilizadores.
@@ -32,12 +33,16 @@ public class LoginService {
     public Servidor autenticar(int matricula, String senha) {
         try {
             Servidor servidor = loginDAO.autenticar(matricula, senha);
+            
             if (servidor == null) {
                 throw new ObjectNotFoundException("Matrícula ou senha inválidos.");
             }
+            if (!servidor.isStatusPerfil()) {
+                throw new ServidorDesativadoException("Este servidor está desativado. Contate o gerente do sistema.");
+            }
             return servidor;
-        } catch (ObjectNotFoundException e) {
-            throw e; // Repassa a exceção para o controller tratar
+        } catch (ObjectNotFoundException | ServidorDesativadoException e) {
+            throw e; // Repassa exceções específicas
         } catch (Exception e) {
             throw new DataIntegrityViolationException("Erro ao realizar login.", e);
         }

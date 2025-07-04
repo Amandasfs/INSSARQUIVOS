@@ -2,6 +2,7 @@ package inss.gca.mogi.mogi.controller.profile;
 
 import inss.gca.mogi.mogi.dto.BuscaDTO;
 import inss.gca.mogi.mogi.dto.CaixaDTO;
+import inss.gca.mogi.mogi.model.Caixa;
 import inss.gca.mogi.mogi.service.ArquivoService;
 import inss.gca.mogi.mogi.service.CaixaService;
 import inss.gca.mogi.mogi.service.SeguradoService;
@@ -25,7 +26,8 @@ public class ConsultorController {
     private TextField buscaTextField;
 
     @FXML
-    private Button buscarButton;
+    private Button buscarButton, buscarCaixasButton;
+
 
     @FXML
     private TableView<BuscaDTO> tableResultado;
@@ -102,6 +104,39 @@ public class ConsultorController {
             clearTabela();
         }
     }
+
+    @FXML
+    private void onBuscarTodas() {
+        try {
+            List<Caixa> caixas = caixaService.buscarTodasCaixas();
+            if (caixas.isEmpty()) {
+                showAlert(Alert.AlertType.INFORMATION, "Nenhum resultado", "Nenhuma caixa cadastrada.");
+                clearTabela();
+                return;
+            }
+
+            List<BuscaDTO> resultados = new ArrayList<>();
+
+            for (Caixa caixa : caixas) {
+                BuscaDTO dto = new BuscaDTO();
+                dto.setCodCaixa(caixa.getCodCaixa());
+                dto.setRua(caixa.getRua());
+                dto.setPrateleira(caixa.getPrateleira());
+                dto.setAndar(caixa.getAndar());
+                dto.setNb(caixa.getNbInicial() + " até " + caixa.getNbFinal());
+                dto.setTipoBeneficio("Caixa cadastrada");
+                // Campos como nomeSegurado, cpfSegurado e outros podem ficar vazios ou ajustar conforme necessidade
+                resultados.add(dto);
+            }
+
+            atualizarTabela(resultados);
+
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Erro ao buscar caixas", e.getMessage());
+            clearTabela();
+        }
+    }
+
 
     private void buscarPorCpf(String cpf) {
         List<BuscaDTO> resultados = seguradoService.buscarPorCpf(cpf.replaceAll("\\D", ""));

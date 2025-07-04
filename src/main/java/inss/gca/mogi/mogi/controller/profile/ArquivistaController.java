@@ -2,6 +2,7 @@ package inss.gca.mogi.mogi.controller.profile;
 
 import inss.gca.mogi.mogi.dto.BuscaDTO;
 import inss.gca.mogi.mogi.dto.CaixaDTO;
+import inss.gca.mogi.mogi.model.Caixa;
 import inss.gca.mogi.mogi.service.ArquivoService;
 import inss.gca.mogi.mogi.service.CaixaService;
 import inss.gca.mogi.mogi.service.SeguradoService;
@@ -28,7 +29,8 @@ public class ArquivistaController {
 
     @FXML
     private TextField buscaTextField;
-
+    @FXML
+    private Button buscarButton, buscarCaixasButton;
     @FXML
     private ChoiceBox<String> filtroChoiceBox;
 
@@ -82,6 +84,38 @@ public class ArquivistaController {
             }
         } catch (Exception e) {
             showAlert("Erro na busca", e.getMessage());
+            clearTabela();
+        }
+    }
+
+    @FXML
+    private void onBuscarTodas() {
+        try {
+            List<Caixa> caixas = caixaService.buscarTodasCaixas();
+            if (caixas.isEmpty()) {
+                showAlert("Nenhum resultado", "Erro ao buscar caixas");
+                clearTabela();
+                return;
+            }
+
+            List<BuscaDTO> resultados = new ArrayList<>();
+
+            for (Caixa caixa : caixas) {
+                BuscaDTO dto = new BuscaDTO();
+                dto.setCodCaixa(caixa.getCodCaixa());
+                dto.setRua(caixa.getRua());
+                dto.setPrateleira(caixa.getPrateleira());
+                dto.setAndar(caixa.getAndar());
+                dto.setNb(caixa.getNbInicial() + " até " + caixa.getNbFinal());
+                dto.setTipoBeneficio("Caixa cadastrada");
+                // Campos como nomeSegurado, cpfSegurado e outros podem ficar vazios ou ajustar conforme necessidade
+                resultados.add(dto);
+            }
+
+            atualizarTabela(resultados);
+
+        } catch (Exception e) {
+            showAlert("Nenhum resultado", "Erro ao buscar caixas");
             clearTabela();
         }
     }
