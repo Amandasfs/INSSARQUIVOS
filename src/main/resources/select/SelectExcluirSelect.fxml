@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.image.Image?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+
+<AnchorPane prefHeight="217.0" prefWidth="599.0" style="-fx-background-color: #044793;" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="inss.gca.mogi.mogi.controller.select.SelectExcluirController">
+   <children>
+      <ImageView fitHeight="31.0" fitWidth="24.0" layoutX="553.0" layoutY="15.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+         <image>
+            <Image url="@../assets/images/closeBranco.png" />
+         </image>
+      </ImageView>
+      <Label layoutX="120.0" layoutY="27.0" text="SELECIONE O QUE VOCE DESEJA EXCLUIR" textFill="WHITE">
+         <font>
+            <Font name="System Bold" size="18.0" />
+         </font>
+      </Label>
+      <Label layoutX="168.0" layoutY="157.0" text="Excluir caixa" textFill="WHITE" />
+      <Label layoutX="324.0" layoutY="157.0" text="Excluir arquivo" textFill="WHITE" />
+      <ImageView fitHeight="65.0" fitWidth="75.0" layoutX="178.0" layoutY="76.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+         <image>
+            <Image url="@../assets/images/excluirArquivos.png" />
+         </image>
+      </ImageView>
+      <ImageView fitHeight="75.0" fitWidth="75.0" layoutX="332.0" layoutY="71.0" pickOnBounds="true" preserveRatio="true" style="-fx-cursor: hand;">
+         <image>
+            <Image url="@../assets/images/excluirCaixa.png" />
+         </image>
+      </ImageView>
+   </children>
+</AnchorPane>
