@@ -48,7 +48,7 @@ public class ArquivoDAO {
      */
     public void atualizar(Arquivo arquivo) {
         try {
-            PermissaoValidator.validarPodeAlterar(arquivo.getIdServidor());
+            PermissaoValidator.validarPodeAlterarCpfNb();
 
             String sql = "UPDATE arquivo SET nb = ?, tipo_beneficio = ?, id_segurado = ?, cod_caixa = ?, id_servidor = ? WHERE id = ?";
 
@@ -157,7 +157,7 @@ public class ArquivoDAO {
 
     public void deletar(int idArquivo, int idServidorLogado) {
         // Validar permissão do servidor que está tentando excluir (logado), não do dono do arquivo
-        PermissaoValidator.validarPodeExcluir(idServidorLogado);
+        PermissaoValidator.validarPodeExcluir();
 
         String sql = "DELETE FROM arquivo WHERE id = ?";
 
@@ -177,7 +177,7 @@ public class ArquivoDAO {
      */
     public void atualizarNB(int id, String novoNB) {
         int idServidor = obterIdServidorPorArquivo(id);
-        PermissaoValidator.validarPodeAlterarCpfNb(idServidor);
+        PermissaoValidator.validarPodeAlterarCpfNb();
 
         String sql = "UPDATE arquivo SET nb = ? WHERE id = ?";
 
@@ -200,7 +200,7 @@ public class ArquivoDAO {
         int idServidor = obterIdServidorPorArquivo(id);
 
         try {
-            PermissaoValidator.validarPodeAlterarCaixa(idServidor);
+            PermissaoValidator.validarPodeAlterarCaixa();
 
             String sql = "UPDATE arquivo SET cod_caixa = ? WHERE id = ?";
 
@@ -269,4 +269,76 @@ public class ArquivoDAO {
 
         return false;
     }
+    /**
+     * Busca um arquivo por seu ID
+     */
+    public Arquivo buscarPorId(int id) {
+        String sql = "SELECT * FROM arquivo WHERE id = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, id);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return new Arquivo(
+                            rs.getInt("id"),
+                            rs.getString("nb"),
+                            rs.getString("tipo_beneficio"),
+                            rs.getInt("id_segurado"),
+                            rs.getString("cod_caixa"),
+                            rs.getInt("id_servidor")
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataIntegrityViolationException("Erro ao buscar arquivo por ID", e);
+        }
+
+        throw new ObjectNotFoundException("Arquivo não encontrado com ID: " + id);
+    }
+
+    /**
+     * Busca todos os arquivos de um segurado específico
+     */
+    /**
+     * Busca todos os arquivos de um segurado específico
+     */
+    public List<Arquivo> buscarPorSegurado(int idSegurado) {
+        List<Arquivo> arquivos = new ArrayList<>();
+        String sql = "SELECT * FROM arquivo WHERE id_segurado = ?";
+
+        try (Connection conn = DatabaseConfig.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, idSegurado);
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    Arquivo arquivo = new Arquivo(
+                            rs.getInt("id"),
+                            rs.getString("nb"),
+                            rs.getString("tipo_beneficio"),
+                            rs.getInt("id_segurado"),
+                            rs.getString("cod_caixa"),
+                            rs.getInt("id_servidor")
+                    );
+                    arquivos.add(arquivo);
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataIntegrityViolationException("Erro ao buscar arquivos por segurado", e);
+        }
+
+        return arquivos;
+    }
+
+    /**
+     * Move um arquivo para uma nova caixa (alias para atualizarCaixa)
+     */
+    public void moverArquivo(int idArquivo, String novoCodCaixa) {
+        atualizarCaixa(idArquivo, novoCodCaixa);
+    }
+
 }

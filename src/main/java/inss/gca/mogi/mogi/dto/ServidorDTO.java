@@ -5,6 +5,7 @@ import inss.gca.mogi.mogi.model.TipoPerfil;
 public class ServidorDTO {
     private int id;
     private String nome;
+    private String senha; // Senha em texto puro (apenas para criação/atualização)
     private int matricula;
     private TipoPerfil tipoPerfil;
     private boolean statusPerfil;
@@ -24,6 +25,9 @@ public class ServidorDTO {
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
 
+    public String getSenha() { return senha; }
+    public void setSenha(String senha) { this.senha = senha; }
+
     public int getMatricula() { return matricula; }
     public void setMatricula(int matricula) { this.matricula = matricula; }
 
@@ -37,63 +41,28 @@ public class ServidorDTO {
     public boolean isPodeCadastrar() { return podeCadastrar; }
     public void setPodeCadastrar(boolean podeCadastrar) { this.podeCadastrar = podeCadastrar; }
 
-    public boolean isPodeAlterar() {
-        return podeAlterar;
-    }
+    public boolean isPodeAlterar() { return podeAlterar; }
+    public void setPodeAlterar(boolean podeAlterar) { this.podeAlterar = podeAlterar; }
 
-    public void setPodeAlterar(boolean podeAlterar) {
-        this.podeAlterar = podeAlterar;
-    }
+    public boolean isPodeAlterarNomeSegurado() { return podeAlterarNomeSegurado; }
+    public void setPodeAlterarNomeSegurado(boolean podeAlterarNomeSegurado) { this.podeAlterarNomeSegurado = podeAlterarNomeSegurado; }
 
-    public boolean isPodeAlterarNomeSegurado() {
-        return podeAlterarNomeSegurado;
-    }
+    public boolean isPodeAlterarCaixa() { return podeAlterarCaixa; }
+    public void setPodeAlterarCaixa(boolean podeAlterarCaixa) { this.podeAlterarCaixa = podeAlterarCaixa; }
 
-    public void setPodeAlterarNomeSegurado(boolean podeAlterarNomeSegurado) {
-        this.podeAlterarNomeSegurado = podeAlterarNomeSegurado;
-    }
+    public boolean isPodeAlterarCpfNb() { return podeAlterarCpfNb; }
+    public void setPodeAlterarCpfNb(boolean podeAlterarCpfNb) { this.podeAlterarCpfNb = podeAlterarCpfNb; }
 
-    public boolean isPodeAlterarCaixa() {
-        return podeAlterarCaixa;
-    }
+    public boolean isPodeAlterarLocalCaixa() { return podeAlterarLocalCaixa; }
+    public void setPodeAlterarLocalCaixa(boolean podeAlterarLocalCaixa) { this.podeAlterarLocalCaixa = podeAlterarLocalCaixa; }
 
-    public void setPodeAlterarCaixa(boolean podeAlterarCaixa) {
-        this.podeAlterarCaixa = podeAlterarCaixa;
-    }
+    public boolean isPodeAlterarCodigoCaixa() { return podeAlterarCodigoCaixa; }
+    public void setPodeAlterarCodigoCaixa(boolean podeAlterarCodigoCaixa) { this.podeAlterarCodigoCaixa = podeAlterarCodigoCaixa; }
 
-    public boolean isPodeAlterarCpfNb() {
-        return podeAlterarCpfNb;
-    }
+    public boolean isPodeExcluir() { return podeExcluir; }
+    public void setPodeExcluir(boolean podeExcluir) { this.podeExcluir = podeExcluir; }
 
-    public void setPodeAlterarCpfNb(boolean podeAlterarCpfNb) {
-        this.podeAlterarCpfNb = podeAlterarCpfNb;
-    }
-
-    public boolean isPodeAlterarLocalCaixa() {
-        return podeAlterarLocalCaixa;
-    }
-
-    public void setPodeAlterarLocalCaixa(boolean podeAlterarLocalCaixa) {
-        this.podeAlterarLocalCaixa = podeAlterarLocalCaixa;
-    }
-
-    public boolean isPodeAlterarCodigoCaixa() {
-        return podeAlterarCodigoCaixa;
-    }
-
-    public void setPodeAlterarCodigoCaixa(boolean podeAlterarCodigoCaixa) {
-        this.podeAlterarCodigoCaixa = podeAlterarCodigoCaixa;
-    }
-
-    public boolean isPodeExcluir() {
-        return podeExcluir;
-    }
-
-    public void setPodeExcluir(boolean podeExcluir) {
-        this.podeExcluir = podeExcluir;
-    }
-
-    // Método auxiliar para verificação no front-end
+    // Método auxiliar para front-end
     public boolean isGerente() {
         return tipoPerfil != null && tipoPerfil.equals(TipoPerfil.GERENTE);
     }

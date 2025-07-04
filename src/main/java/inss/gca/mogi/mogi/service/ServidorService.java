@@ -1,16 +1,15 @@
 package inss.gca.mogi.mogi.service;
 
 import inss.gca.mogi.mogi.dao.ServidorDAO;
+import inss.gca.mogi.mogi.dto.ServidorDTO;
+import inss.gca.mogi.mogi.mapper.ServidorMapper;
 import inss.gca.mogi.mogi.model.Servidor;
 import inss.gca.mogi.mogi.security.PermissaoValidator;
-import inss.gca.mogi.mogi.service.exceptions.PermissionDeniedException;
+import inss.gca.mogi.mogi.service.exceptions.DataIntegrityViolationException;
+import inss.gca.mogi.mogi.service.exceptions.ObjectNotFoundException;
+import inss.gca.mogi.mogi.config.PasswordUtil;
+import inss.gca.mogi.mogi.util.Sessao;
 
-import java.util.List;
-
-/**
- * Camada de serviço para manipulação dos dados de Servidor.
- * Realiza validações e encapsula a lógica entre Controller e DAO.
- */
 public class ServidorService {
 
     private final ServidorDAO servidorDAO;
@@ -19,81 +18,86 @@ public class ServidorService {
         this.servidorDAO = new ServidorDAO();
     }
 
-    public void criarServidor(Servidor servidor, int gerenteId) {
-        validarPermissaoGerente(gerenteId);
-        servidorDAO.criarServidor(servidor, gerenteId);
-    }
+    public ServidorDTO criarServidor(ServidorDTO servidorDTO) {
+        PermissaoValidator.validarGerente();
 
-    public void atualizarServidor(Servidor servidor, int gerenteId) {
-        validarPermissaoGerente(gerenteId);
-        servidorDAO.atualizarServidor(servidor, gerenteId);
-    }
+        try {
+            Servidor servidor = ServidorMapper.toEntity(servidorDTO);
+            servidor.setSenha(PasswordUtil.hashPassword(servidorDTO.getSenha()));
 
-    public void atualizarPermissoes(Servidor servidor, int gerenteId) {
-        validarPermissaoGerente(gerenteId);
-        servidorDAO.atualizarPermissoes(servidor, gerenteId);
-    }
+            servidorDAO.criarServidor(servidor, Sessao.getServidor().getId());
+            return ServidorMapper.toDto(servidor);
 
-    public void atualizarSenha(int servidorId, String novaSenha) {
-        // Pode ser que o próprio servidor altere a senha, sem precisar validar gerente
-        servidorDAO.atualizarSenha(servidorId, novaSenha);
-    }
-
-    public Servidor buscarPorId(int id) {
-        return servidorDAO.buscarPorId(id);
-    }
-
-    public Servidor buscarPorMatricula(int matricula) {
-        return servidorDAO.buscarPorMatricula(matricula);
-    }
-
-    public Servidor buscarPorMatricula(String matricula) {
-        return servidorDAO.buscarPorMatricula(matricula);
-    }
-
-    public Servidor autenticar(String matricula, String senha) {
-        return servidorDAO.autenticar(matricula, senha);
-    }
-
-    public List<Servidor> gerarRelatorioServidores(int gerenteId) {
-        validarPermissaoGerente(gerenteId);
-        return servidorDAO.gerarRelatorioServidores();
-    }
-
-    /**
-     * Valida se o servidor é gerente para operações restritas.
-     * @throws PermissionDeniedException caso não seja gerente ou inativo.
-     */
-    private void validarPermissaoGerente(int matricula) {
-        Servidor servidor = buscarPorMatricula(matricula);
-        if (!servidor.isStatusPerfil()) {
-            throw new PermissionDeniedException("Servidor está inativo.");
-        }
-        if (!servidor.getTipoPerfil().name().equalsIgnoreCase("GERENTE")) {
-            throw new PermissionDeniedException("Permissão negada: somente gerentes podem executar esta operação.");
+        } catch (Exception e) {
+            throw new DataIntegrityViolationException("Erro ao criar servidor: " + e.getMessage());
         }
     }
-    /**
-     * Reativa um servidor desativado (status_perfil = true).
-     * Apenas gerentes podem executar essa ação.
-     *
-     * @param matriculaServidorReativado Matrícula do servidor a ser reativado
-     * @param matriculaGerente           Matrícula do gerente logado
-     */
-    public void reativarServidor(int matriculaServidorReativado, int matriculaGerente) {
-        // Valida se o solicitante tem permissão
-        PermissaoValidator.validarPodeReativarPerfil(matriculaGerente);
 
-        // Busca o servidor a ser reativado
-        Servidor servidor = servidorDAO.buscarPorMatricula(matriculaServidorReativado);
+    public ServidorDTO atualizarServidor(ServidorDTO servidorDTO) {
+        PermissaoValidator.validarGerente();
 
-        // Verifica se já está ativo
-        if (servidor.isStatusPerfil()) {
-            throw new IllegalStateException("Este servidor já está com o perfil ativo.");
+        try {
+            Servidor servidorExistente = servidorDAO.buscarPorId(servidorDTO.getId());
+            Servidor servidorAtualizado = ServidorMapper.toEntity(servidorDTO);
+
+            // Mantém a senha original se não foi alterada
+            if (servidorDTO.getSenha() == null || servidorDTO.getSenha().isEmpty()) {
+                servidorAtualizado.setSenha(servidorExistente.getSenha());
+            } else {
+                servidorAtualizado.setSenha(PasswordUtil.hashPassword(servidorDTO.getSenha()));
+            }
+
+            servidorDAO.atualizarServidor(servidorAtualizado, Sessao.getServidor().getId());
+            return ServidorMapper.toDto(servidorAtualizado);
+
+        } catch (Exception e) {
+            throw new DataIntegrityViolationException("Erro ao atualizar servidor: " + e.getMessage());
         }
-
-        // Reativa
-        servidorDAO.reativarServidor(servidor.getId(), matriculaGerente);
     }
 
+    public ServidorDTO buscarPorMatricula(int matricula) {
+        PermissaoValidator.validarPerfilAtivo();
+
+        Servidor servidor = servidorDAO.buscarPorMatricula(matricula);
+        if (servidor == null) {
+            throw new ObjectNotFoundException("Servidor não encontrado");
+        }
+        return ServidorMapper.toDto(servidor);
+    }
+
+    public void atualizarPermissoes(int servidorId, ServidorDTO permissoesDTO) {
+        PermissaoValidator.validarGerente();
+
+        try {
+            Servidor servidor = servidorDAO.buscarPorId(servidorId);
+
+            // Atualiza apenas as permissões
+            servidor.setPodeCadastrar(permissoesDTO.isPodeCadastrar());
+            servidor.setPodeAlterar(permissoesDTO.isPodeAlterar());
+            servidor.setPodeAlterarNomeSegurado(permissoesDTO.isPodeAlterarNomeSegurado());
+            servidor.setPodeAlterarCaixa(permissoesDTO.isPodeAlterarCaixa());
+            servidor.setPodeAlterarCpfNb(permissoesDTO.isPodeAlterarCpfNb());
+            servidor.setPodeAlterarLocalCaixa(permissoesDTO.isPodeAlterarLocalCaixa());
+            servidor.setPodeAlterarCodigoCaixa(permissoesDTO.isPodeAlterarCodigoCaixa());
+            servidor.setPodeExcluir(permissoesDTO.isPodeExcluir());
+
+            servidorDAO.atualizarPermissoes(servidor, Sessao.getServidor().getId());
+
+        } catch (Exception e) {
+            throw new DataIntegrityViolationException("Erro ao atualizar permissões: " + e.getMessage());
+        }
+    }
+
+    public ServidorDTO autenticar(String matricula, String senha) {
+        try {
+            Servidor servidor = servidorDAO.autenticar(matricula, senha);
+            if (servidor == null) {
+                throw new ObjectNotFoundException("Matrícula ou senha inválidos");
+            }
+            return ServidorMapper.toDto(servidor);
+
+        } catch (Exception e) {
+            throw new DataIntegrityViolationException("Erro ao autenticar: " + e.getMessage());
+        }
+    }
 }

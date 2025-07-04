@@ -1,19 +1,17 @@
 package inss.gca.mogi.mogi.service;
 
 import inss.gca.mogi.mogi.dao.SeguradoDAO;
-import inss.gca.mogi.mogi.dto.BuscaDTO;
+import inss.gca.mogi.mogi.dto.SeguradoDTO;
+import inss.gca.mogi.mogi.mapper.SeguradoMapper;
 import inss.gca.mogi.mogi.model.Segurado;
 import inss.gca.mogi.mogi.security.PermissaoValidator;
 import inss.gca.mogi.mogi.service.exceptions.DataIntegrityViolationException;
 import inss.gca.mogi.mogi.service.exceptions.ObjectNotFoundException;
+import inss.gca.mogi.mogi.util.Sessao;
 
-import java.sql.SQLException;
 import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * Serviço responsável pelas regras de negócio da entidade Segurado,
- * atuando como intermediário entre Controller e DAO.
- */
 public class SeguradoService {
 
     private final SeguradoDAO seguradoDAO;
@@ -22,93 +20,59 @@ public class SeguradoService {
         this.seguradoDAO = new SeguradoDAO();
     }
 
-    /**
-     * Cria novo segurado.
-     * @param segurado objeto com dados do segurado.
-     * @return segurado criado (com ID gerado).
-     */
-    public Segurado criarSegurado(Segurado segurado) {
-        PermissaoValidator.validarPodeCadastrar(segurado.getIdServidor());
+    public SeguradoDTO criarSegurado(SeguradoDTO seguradoDTO) {
+        PermissaoValidator.validarPodeCadastrar();
+
         try {
+            Segurado segurado = SeguradoMapper.toEntity(seguradoDTO);
+            segurado.setIdServidor(Sessao.getServidor().getId());
+
             seguradoDAO.criar(segurado);
-            return segurado;
-        } catch (DataIntegrityViolationException e) {
-            throw new DataIntegrityViolationException("Erro ao criar segurado: dados inválidos ou CPF já existente.", e);
+            return SeguradoMapper.toDto(segurado);
+
+        } catch (Exception e) {
+            throw new DataIntegrityViolationException("Erro ao criar segurado: " + e.getMessage());
         }
     }
 
-    /**
-     * Busca segurado pelo ID.
-     */
-    public Segurado buscarPorId(int id) {
-        return seguradoDAO.buscarPorId(id);
-    }
-
-    /**
-     * Busca arquivos associados a um CPF.
-     * @throws ObjectNotFoundException se não houver arquivos.
-     */
-    public List<BuscaDTO> buscarPorCpf(String cpf) {
-        List<BuscaDTO> resultados = seguradoDAO.buscarPorCpf(cpf);
-        if (resultados.isEmpty()) {
-            throw new ObjectNotFoundException("Nenhum arquivo encontrado para o CPF: " + cpf);
-        }
-        return resultados;
-    }
-
-    /**
-     * Lista todos os segurados.
-     */
-    public List<Segurado> listarTodos() {
-        return seguradoDAO.buscarTodos();
-    }
-
-    /**
-     * Atualiza CPF de segurado.
-     */
-    public void atualizarCPF(int id, String novoCpf) throws SQLException {
-        int idServidor = seguradoDAO.obterIdServidorPorSegurado(id);
-        PermissaoValidator.validarPodeAlterarCpfNb(idServidor);
+    public SeguradoDTO atualizarNomeSegurado(int id, String novoNome) {
+        PermissaoValidator.validarPodeAlterarNomeSegurado();
 
         try {
-            seguradoDAO.atualizarCPF(id, novoCpf);
-        } catch (DataIntegrityViolationException e) {
-            throw new DataIntegrityViolationException("Erro ao atualizar CPF: verifique se o CPF já está em uso.", e);
+            seguradoDAO.atualizarNome(id, novoNome);
+            Segurado segurado = seguradoDAO.buscarPorId(id);
+            return SeguradoMapper.toDto(segurado);
+
+        } catch (Exception e) {
+            throw new DataIntegrityViolationException("Erro ao atualizar nome: " + e.getMessage());
         }
     }
 
-    /**
-     * Atualiza nome do segurado.
-     */
-    public void atualizarNome(int id, String novoNome) throws SQLException {
-        int idServidor = seguradoDAO.obterIdServidorPorSegurado(id);
-        PermissaoValidator.validarPodeAlterarNomeSegurado(idServidor);
+    public SeguradoDTO buscarPorId(int id) {
+        PermissaoValidator.validarPerfilAtivo();
 
-        seguradoDAO.atualizarNome(id, novoNome);
+        Segurado segurado = seguradoDAO.buscarPorId(id);
+        if (segurado == null) {
+            throw new ObjectNotFoundException("Segurado não encontrado");
+        }
+        return SeguradoMapper.toDto(segurado);
     }
 
-    /**
-     * Exclui segurado pelo ID.
-     */
-    public void deletar(int id) throws SQLException {
-        int idServidor = seguradoDAO.obterIdServidorPorSegurado(id);
-        PermissaoValidator.validarPodeExcluir(idServidor);
+    public List<SeguradoDTO> listarTodos() {
+        PermissaoValidator.validarPerfilAtivo();
 
-        seguradoDAO.deletar(id);
+        return seguradoDAO.buscarTodos().stream()
+                .map(SeguradoMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    /**
-     * Busca segurado por CPF único.
-     */
-    public Segurado buscarPorCpfUnico(String cpf) {
-        return seguradoDAO.buscarPorCpfUnico(cpf);
-    }
+    public void deletarSegurado(int id) {
+        PermissaoValidator.validarPodeExcluir();
 
-    /**
-     * Exclui segurado apenas se não tiver arquivos vinculados.
-     */
-    public void deletarSeNaoTiverArquivos(int id) throws SQLException {
-        Segurado segurado = buscarPorId(id); // valida existência
-        seguradoDAO.deletarSeNaoTiverArquivos(id);
+        try {
+            seguradoDAO.deletar(id);
+        } catch (Exception e) {
+            throw new DataIntegrityViolationException("Erro ao excluir segurado: " + e.getMessage());
+        }
     }
 }
